@@ -44,12 +44,6 @@
  *
  * Normally a basic HID keyboard uses 8 bytes:
  *     Modifier Reserved Key Key Key Key Key Key
- *
- * You can dump your device's report descriptor with:
- *
- *     sudo usbhid-dump -m vid:pid -e descriptor
- *
- * (change vid:pid' to your device's vendor ID and product ID).
  */
 static const uint8_t SC_HID_KEYBOARD_REPORT_DESC[] = {
     // Usage Page (Generic Desktop)

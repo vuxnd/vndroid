@@ -73,8 +73,7 @@ sc_hwdec_init_d3d11va(struct sc_hwdec *hwdec, SDL_Renderer *renderer) {
 
 bool
 sc_hwdec_init(struct sc_hwdec *hwdec, enum AVHWDeviceType hw_type,
-              const char *hw_device, bool hw_forced, SDL_Renderer *renderer) {
-    (void) hw_device; // only used by some hardware decoders
+              bool hw_forced, SDL_Renderer *renderer) {
     (void) renderer; // only used by some hardware decoders
 
     hwdec->hw_type = hw_type;

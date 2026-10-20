@@ -15,9 +15,6 @@ struct sc_opengl {
     const GLubyte *
     (*GetString)(GLenum name);
 
-    GLenum
-    (*GetError)(void);
-
     void
     (*BindTexture)(GLenum target, GLuint texture);
 

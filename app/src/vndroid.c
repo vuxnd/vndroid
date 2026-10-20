@@ -331,16 +331,14 @@ static bool
 sc_init_video_hwdec(struct sc_hwdec *hwdec, enum sc_hwdec_mode mode,
                     struct sc_screen *screen) {
     enum AVHWDeviceType hw_type = AV_HWDEVICE_TYPE_NONE;
-    const char *hw_device = NULL;
     SDL_Renderer *renderer = NULL;
     if (screen) {
         hw_type = sc_screen_get_hw_type(screen);
-        hw_device = sc_screen_get_hw_device(screen);
         renderer = screen->renderer;
     }
     bool hw_forced = hw_type != AV_HWDEVICE_TYPE_NONE
                   && mode != SC_HWDEC_MODE_AUTO;
-    if (sc_hwdec_init(hwdec, hw_type, hw_device, hw_forced, renderer)) {
+    if (sc_hwdec_init(hwdec, hw_type, hw_forced, renderer)) {
         return true;
     }
 
@@ -837,8 +835,8 @@ aoa_complete:
     bool needs_video_decoder = options->video_playback;
     bool needs_audio_decoder = options->audio_playback;
     if (needs_video_decoder) {
-        struct sc_screen *screen = options->video_playback ? &s->screen : NULL;
-        assert(!screen || screen_initialized);
+        struct sc_screen *screen = &s->screen;
+        assert(screen_initialized);
 
         if (!sc_init_video_hwdec(&s->hwdec, options->hwdec_mode, screen)) {
             goto end;

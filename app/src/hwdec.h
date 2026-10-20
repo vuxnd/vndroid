@@ -22,7 +22,7 @@ struct sc_hwdec {
 
 bool
 sc_hwdec_init(struct sc_hwdec *hwdec, enum AVHWDeviceType hw_type,
-              const char *hw_device, bool hw_forced, SDL_Renderer *renderer);
+              bool hw_forced, SDL_Renderer *renderer);
 
 const AVCodec *
 sc_hwdec_find_decoder(struct sc_hwdec *hwdec, enum AVCodecID codec_id);

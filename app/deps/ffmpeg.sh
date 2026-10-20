@@ -57,6 +57,7 @@ else
         --disable-everything
         --disable-vulkan
         --disable-vdpau
+        --disable-vaapi
         --enable-swresample
         --enable-libdav1d
         --enable-decoder=h264
