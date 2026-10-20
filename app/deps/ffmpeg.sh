@@ -79,30 +79,9 @@ else
         --enable-muxer=opus
         --enable-muxer=flac
         --enable-muxer=wav
+        --disable-avdevice
+        --disable-vaapi
     )
-
-    if [[ "$HOST" == linux ]]
-    then
-        conf+=(
-            --enable-libv4l2
-            --enable-outdev=v4l2
-            --enable-encoder=rawvideo
-            --enable-vaapi
-            --enable-libdrm
-            --disable-xlib
-            --enable-hwaccel=h264_vaapi
-            --enable-hwaccel=hevc_vaapi
-            --enable-hwaccel=av1_vaapi
-            --enable-hwaccel=vp8_vaapi
-            --enable-hwaccel=vp9_vaapi
-        )
-    else
-        conf+=(
-            # libavdevice is only used for V4L2 on Linux
-            --disable-avdevice
-            --disable-vaapi
-        )
-    fi
 
     if [[ "$HOST" == win* ]]
     then

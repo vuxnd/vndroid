@@ -41,14 +41,6 @@ else
         -DSDL_TESTS=OFF
     )
 
-    if [[ "$HOST" == linux ]]
-    then
-        conf+=(
-            -DSDL_WAYLAND=ON
-            -DSDL_X11=ON
-        )
-    fi
-
     if [[ "$LINK_TYPE" == static ]]
     then
         conf+=(

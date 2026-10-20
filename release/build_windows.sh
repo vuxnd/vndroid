@@ -11,10 +11,9 @@ case "$1" in
         BUILD_TYPE=cross
         ;;
     arm64)
-        # Contrary to the Windows x86 builds, which are cross-compiled from
-        # Linux, the Windows ARM64 release is built natively on Windows:
-        # cross-building from Linux would require a separate LLVM-based
-        # toolchain.
+        # Contrary to the Windows x86 builds, which are cross-compiled with
+        # mingw-w64, the Windows ARM64 release is built natively on Windows:
+        # cross-building it would require a separate LLVM-based toolchain.
         WINXX=winarm64
         BUILD_TYPE=native
         ;;

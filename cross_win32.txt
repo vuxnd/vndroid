@@ -1,4 +1,4 @@
-# apt install mingw-w64 mingw-w64-tools
+# mingw-w64 cross toolchain required
 
 [binaries]
 name = 'mingw'

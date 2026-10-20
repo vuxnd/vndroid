@@ -67,81 +67,17 @@ jobs:
         run: server/build_without_gradle.sh
 
   test-client:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
-        # Same as build-linux-x86_64
       - name: Install dependencies
         run: |
-          sudo apt update
-          sudo apt install -y meson ninja-build nasm ffmpeg libavcodec-dev \
-             libavdevice-dev libavformat-dev libavutil-dev libswresample-dev \
-             libusb-1.0-0 libusb-1.0-0-dev libv4l-dev \
-             libasound2-dev libpulse-dev \
-             libaudio-dev libfribidi-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
-             libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
-             libxkbcommon-dev libdrm-dev libva-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
-             libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev libthai-dev \
-             libpipewire-0.3-dev libwayland-dev libdecor-0-dev liburing-dev
-
-        # SDL3 is not available in Ubuntu yet
-      - name: Install SDL3
-        run: |
-          app/deps/sdl.sh linux native shared
+          brew install meson ninja nasm pkg-config sdl3 ffmpeg libusb
 
       - name: Test
-        run: |
-          export PKG_CONFIG_PATH="$PWD"/app/deps/work/install/linux-native-shared/lib/pkgconfig
-          export LD_LIBRARY_PATH="$PWD"/app/deps/work/install/linux-native-shared/lib
-          release/test_client.sh
-
-  build-linux-x86_64:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Check architecture
-        run: |
-            arch=$(uname -m)
-            if [[ "$arch" != x86_64 ]]
-            then
-                echo "Unexpected architecture: $arch" >&2
-                exit 1
-            fi
-
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-        # https://wiki.libsdl.org/SDL3/README-linux#build-dependencies
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y meson ninja-build nasm ffmpeg libavcodec-dev \
-             libavdevice-dev libavformat-dev libavutil-dev libswresample-dev \
-             libusb-1.0-0 libusb-1.0-0-dev libv4l-dev \
-             libasound2-dev libpulse-dev \
-             libaudio-dev libfribidi-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
-             libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
-             libxkbcommon-dev libdrm-dev libva-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
-             libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev libthai-dev \
-             libpipewire-0.3-dev libwayland-dev libdecor-0-dev liburing-dev
-
-      - name: Build
-        run: release/build_linux.sh x86_64
-
-      # upload-artifact does not preserve permissions
-      - name: Tar
-        run: |
-            cd release/work/build-linux-x86_64
-            mkdir dist-tar
-            cd dist-tar
-            tar -C .. -cvf dist.tar.gz dist/
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: build-linux-x86_64-intermediate
-          path: release/work/build-linux-x86_64/dist-tar/
+        run: release/test_client.sh
 
   build-win32:
     runs-on: ubuntu-latest
@@ -361,42 +297,6 @@ jobs:
           name: build-macos-x86_64-intermediate
           path: release/work/build-macos-x86_64/dist-tar/
 
-  package-linux-x86_64:
-    needs:
-      - build-vndroid-server
-      - build-linux-x86_64
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Download vndroid-server
-        uses: actions/download-artifact@v8
-        with:
-          name: vndroid-server
-          path: release/work/build-server/server/
-
-      - name: Download build-linux-x86_64
-        uses: actions/download-artifact@v8
-        with:
-          name: build-linux-x86_64-intermediate
-          path: release/work/build-linux-x86_64/dist-tar/
-
-      # upload-artifact does not preserve permissions
-      - name: Detar
-        run: |
-            cd release/work/build-linux-x86_64
-            tar xf dist-tar/dist.tar.gz
-
-      - name: Package
-        run: release/package_client.sh linux-x86_64 tar.gz
-
-      - name: Upload release
-        uses: actions/upload-artifact@v7
-        with:
-          name: release-linux-x86_64
-          path: release/output/
-
   package-win32:
     needs:
       - build-vndroid-server
@@ -580,7 +480,6 @@ jobs:
   release:
     needs:
       - build-vndroid-server
-      - package-linux-x86_64
       - package-win32
       - package-win64
       - package-winarm64
@@ -596,12 +495,6 @@ jobs:
         with:
           name: vndroid-server
           path: release/work/build-server/server/
-
-      - name: Download release-linux-x86_64
-        uses: actions/download-artifact@v8
-        with:
-          name: release-linux-x86_64
-          path: release/output/
 
       - name: Download release-win32
         uses: actions/download-artifact@v8

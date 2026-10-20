@@ -5,7 +5,6 @@ cd "$(dirname ${BASH_SOURCE[0]})"
 
 cd "$OUTPUT_DIR"
 sha256sum "vndroid-server-$VERSION" \
-    "vndroid-linux-x86_64-$VERSION.tar.gz" \
     "vndroid-win32-$VERSION.zip" \
     "vndroid-win64-$VERSION.zip" \
     "vndroid-winarm64-$VERSION.zip" \
