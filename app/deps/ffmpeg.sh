@@ -80,7 +80,6 @@ else
         --enable-muxer=flac
         --enable-muxer=wav
         --disable-avdevice
-        --disable-vaapi
     )
 
     if [[ "$HOST" == win* ]]
