@@ -5,6 +5,8 @@
 # The body is a function so bash has read the whole script before the bundle
 # that holds it is moved.
 main() {
+    # Launched from the Finder, the helper shares the app's process group
+    trap '' HUP TERM
     local DMG="$1" B="$2" PID="$3" MNT="" TEXT
 
     fail() {
@@ -13,6 +15,7 @@ main() {
             hdiutil detach -quiet "$MNT" || hdiutil detach -quiet -force "$MNT"
             rmdir "$MNT"
         fi
+        rm -f "$DMG"
         TEXT="Update failed: $1"
         TEXT="${TEXT//\\/\\\\}"
         TEXT="${TEXT//\"/\\\"}"

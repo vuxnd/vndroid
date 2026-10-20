@@ -4,8 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <SDL3/SDL.h>
-#ifndef _WIN32
+#ifdef _WIN32
+# include <io.h>
+#else
 # include <unistd.h>
 #endif
 
@@ -65,22 +69,6 @@ set_error(const char *error) {
     }
 }
 
-static FILE *
-file_open(const char *path) {
-#ifdef _WIN32
-    wchar_t *wpath = sc_str_to_wchars(path);
-    if (!wpath) {
-        LOG_OOM();
-        return NULL;
-    }
-    FILE *f = _wfopen(wpath, L"wb");
-    free(wpath);
-    return f;
-#else
-    return fopen(path, "wb");
-#endif
-}
-
 static void
 file_remove(const char *path) {
 #ifdef _WIN32
@@ -94,6 +82,41 @@ file_remove(const char *path) {
 #else
     remove(path);
 #endif
+}
+
+// Create the file exclusively, the path is predictable
+static FILE *
+file_open(const char *path) {
+    // Remove any stale file, errors are ignored
+    file_remove(path);
+#ifdef _WIN32
+    wchar_t *wpath = sc_str_to_wchars(path);
+    if (!wpath) {
+        LOG_OOM();
+        return NULL;
+    }
+    int fd = _wopen(wpath, _O_WRONLY | _O_CREAT | _O_EXCL | _O_BINARY,
+                    _S_IREAD | _S_IWRITE);
+    free(wpath);
+    if (fd < 0) {
+        return NULL;
+    }
+    FILE *f = _fdopen(fd, "wb");
+#else
+    int fd = open(path, O_WRONLY | O_CREAT | O_EXCL, 0600);
+    if (fd < 0) {
+        return NULL;
+    }
+    FILE *f = fdopen(fd, "wb");
+#endif
+    if (!f) {
+#ifdef _WIN32
+        _close(fd);
+#else
+        close(fd);
+#endif
+    }
+    return f;
 }
 
 static bool
@@ -186,10 +209,12 @@ curl_download(const char *url, const char *path,
     bool ok = true;
     for (;;) {
         ssize_t r = sc_pipe_read_intr(&update.intr, pid, pout, buf, CHUNK_SIZE);
-        if (!r) {
-            break; // EOF
+        if (r <= 0) {
+            // EOF. On Windows, a closed pipe reads as an error. A truncated
+            // download is caught by the curl exit code and the SHA-256.
+            break;
         }
-        if (r < 0 || fwrite(buf, 1, r, f) != (size_t) r) {
+        if (fwrite(buf, 1, r, f) != (size_t) r) {
             ok = false;
             break;
         }
@@ -546,7 +571,7 @@ sc_update_handle_event(const SDL_Event *event) {
 }
 
 // Start the helper, which waits for this process to exit then installs
-static void
+static bool
 start_helper(void) {
     char pid_str[16];
 #ifdef _WIN32
@@ -563,12 +588,13 @@ start_helper(void) {
     sc_pid pid;
     if (sc_process_execute(argv, &pid, flags) != SC_PROCESS_SUCCESS) {
         LOGE("Could not start %s", update.helper_path);
-        return;
+        return false;
     }
 #ifdef _WIN32
     sc_process_close(pid);
 #endif
     // On Unix, never wait: the helper waits for this process to exit
+    return true;
 }
 
 void
@@ -585,7 +611,9 @@ sc_update_destroy(void) {
 
     if (update.install_pending && update.asset_path && update.helper_path
             && update.target_dir) {
-        start_helper();
+        if (!start_helper()) {
+            file_remove(update.asset_path);
+        }
     } else if (update.asset_path) {
         // Downloaded but not installed
         file_remove(update.asset_path);

@@ -6,7 +6,7 @@ VERSION="${VERSION:-$(git describe --tags --always)}"
 
 # A release tag must match the version in meson.build, or the app would offer
 # the same update forever
-if [[ "$VERSION" =~ ^v[0-9] ]]
+if [[ "$VERSION" =~ ^v[0-9]+(\.[0-9]+)*$ ]]
 then
     MESON_VERSION="$(sed -n "s/^[[:space:]]*version: *'\([^']*\)'.*/\1/p" ../meson.build | head -n 1)"
     if [[ "$MESON_VERSION" != "${VERSION#v}" ]]
