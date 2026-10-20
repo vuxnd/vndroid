@@ -124,28 +124,19 @@ Hardware decoding can be configured explicitly:
 ```bash
 vndroid --hwdec=auto          # use hardware decoding if possible (default)
 vndroid --hwdec=disabled      # software decoding
-vndroid --hwdec=vaapi         # VA-API, Linux only
 vndroid --hwdec=d3d11va       # D3D11VA, Windows only
 vndroid --hwdec=videotoolbox  # VideoToolbox, macOS only
 ```
 
-Hardware decoding is only supported when video playback is enabled and V4L2 is
-disabled.
+Hardware decoding is only supported when video playback is enabled.
 
 The available hardware decoders are:
- - `vaapi` (Linux only). This requires the renderer to use EGL: this is always
-   the case on Wayland, and VNdroid also requests EGL on X11 (where SDL uses GLX
-   by default). Set `SDL_VIDEO_FORCE_EGL=0` to force GLX (hardware decoding is
-   then unavailable). The VA-API driver for the GPU must be installed
-   (`va-driver-all` on Debian/Ubuntu). The prebuilt binary uses the libva
-   installed on the system. Trilinear filtering (mipmaps) is not available for
-   hardware frames.
  - `d3d11va` (Windows only).
  - `videotoolbox` (macOS only).
 
 With `--hwdec=auto`, if the hardware decoder cannot decode the stream, FFmpeg
 falls back to software decoding. It fails instead if a specific hardware decoder
-is explicitly requested (e.g. `--hwdec=vaapi`).
+is explicitly requested (e.g. `--hwdec=d3d11va`).
 
 
 ## Orientation
@@ -274,30 +265,27 @@ By default, there is no video buffering, to get the lowest possible latency.
 Buffering can be added to delay the video stream and compensate for jitter to
 get a smoother playback.
 
-The configuration is available independently for the display,
-[v4l2 sinks](v4l2.md#buffering) and [audio](audio.md#buffering) playback.
+The configuration is available independently for the display and
+[audio](audio.md#buffering) playback.
 
 ```bash
 vndroid --video-buffer=50     # add 50ms buffering for video playback
 vndroid --audio-buffer=200    # set 200ms buffering for audio playback
-vndroid --v4l2-buffer=300     # add 300ms buffering for v4l2 sink
 ```
 
 They can be applied simultaneously:
 
 ```bash
-vndroid --video-buffer=50 --v4l2-buffer=300
+vndroid --video-buffer=50 --audio-buffer=200
 ```
 
 
 ## No playback
 
 It is possible to capture an Android device without playing video or audio on
-the computer. This option is useful when [recording](recording.md) or when
-[v4l2](#video4linux) is enabled:
+the computer. This option is useful when [recording](recording.md):
 
 ```bash
-vndroid --v4l2-sink=/dev/video2 --no-playback
 vndroid --record=file.mkv --no-playback
 # interrupt with Ctrl+C
 ```
@@ -305,9 +293,6 @@ vndroid --record=file.mkv --no-playback
 It is also possible to disable video and audio playback separately:
 
 ```bash
-# Send video to V4L2 sink without playing it, but keep audio playback
-vndroid --v4l2-sink=/dev/video2 --no-video-playback
-
 # Record both video and audio, but only play video
 vndroid --record=file.mkv --no-audio-playback
 ```
@@ -320,8 +305,3 @@ To disable video forwarding completely, so that only audio is forwarded:
 ```bash
 vndroid --no-video
 ```
-
-
-## Video4Linux
-
-See the dedicated [Video4Linux](v4l2.md) page.

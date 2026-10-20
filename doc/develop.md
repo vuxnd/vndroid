@@ -248,11 +248,9 @@ Depending on the arguments passed to `vndroid`, several components may be used.
 Here is an overview of the video and audio components:
 
 ```
-                                                 V4L2 sink
-                                               /
-                                       decoder
-                                     /         \
-        VIDEO -------------> demuxer             display
+                                       decoder --- display
+                                     /
+        VIDEO -------------> demuxer
                                      \
                                        recorder
                                      /
@@ -271,7 +269,6 @@ recording, they are _muxed_ (asynchronously) into a container (MKV or MP4) on
 the client side.
 
 Video frames are sent to the screen/display to be rendered in the VNdroid window.
-They may also be sent to a [V4L2 sink](v4l2.md).
 
 Audio "frames" (an array of decoded samples) are sent to the audio player.
 

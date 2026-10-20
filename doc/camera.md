@@ -188,9 +188,3 @@ vndroid --video-source=camera --camera-zoom=1.5
 
 It can also be adjusted dynamically using <kbd>MOD</kbd>+<kbd>↑</kbd> _(up)_ and
 <kbd>MOD</kbd>+<kbd>↓</kbd> _(down)_.
-
-
-## Webcam
-
-Combined with the [V4L2](v4l2.md) feature on Linux, the Android device camera
-may be used as a webcam on the computer.

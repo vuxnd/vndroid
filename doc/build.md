@@ -6,7 +6,7 @@ Here are the instructions to build _VNdroid_ (client and server).
 ## Requirements
 
 You need [adb]. It is available in the [Android SDK platform
-tools][platform-tools], or packaged in your distribution (`adb`).
+tools][platform-tools].
 
 On Windows, download the [platform-tools][platform-tools-windows] and extract
 the following files to a directory accessible from your `PATH`:
@@ -26,78 +26,7 @@ The client requires [FFmpeg] and [SDL]. Just follow the instructions.
 
 ## System-specific steps
 
-### Linux
-
-Install the required packages from your package manager.
-
-#### Debian/Ubuntu
-
-```bash
-# runtime dependencies
-sudo apt install ffmpeg libsdl3-0 adb libusb-1.0-0 va-driver-all
-
-# client build dependencies
-sudo apt install gcc git pkg-config meson ninja-build libsdl3-dev \
-                 libavcodec-dev libavdevice-dev libavformat-dev libavutil-dev \
-                 libswresample-dev libusb-1.0-0-dev libv4l-dev libdrm-dev
-
-# server build dependencies
-sudo apt install openjdk-17-jdk
-```
-
-On old versions (like Ubuntu 16.04), `meson` is too old. In that case, install
-it from `pip3`:
-
-```bash
-sudo apt install python3-pip
-pip3 install meson
-```
-
-
-#### Fedora
-
-```bash
-# enable RPM fusion free
-sudo dnf install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-
-# client build dependencies
-sudo dnf install SDL3-devel ffms2-devel libusb1-devel libavdevice-free-devel \
-                 libdrm-devel meson gcc make
-
-# server build dependencies
-sudo dnf install java-devel
-```
-
-
-
 ### Windows
-
-#### Cross-compile from Linux
-
-This is the preferred method (and the way the release is built).
-
-From _Debian_, install _mingw_:
-
-```bash
-sudo apt install mingw-w64 mingw-w64-tools libz-mingw-w64-dev
-```
-
-You also need the JDK to build the server:
-
-```bash
-sudo apt install openjdk-17-jdk
-```
-
-Then generate the releases:
-
-```bash
-./release.sh
-```
-
-It will generate win32 and win64 releases into `dist/`.
-
-
-#### In MSYS2
 
 From Windows, you need [MSYS2] to build the project. From an MSYS2 terminal,
 install the required packages:
@@ -180,8 +109,6 @@ directory. For example:
 [Android SDK]: https://developer.android.com/studio/index.html
 
 ```bash
-# Linux
-export ANDROID_SDK_ROOT=~/Android/Sdk
 # Mac
 export ANDROID_SDK_ROOT=~/Library/Android/sdk
 # Windows
@@ -224,10 +151,6 @@ This installs several files:
    disconnected icon)
  - `/usr/local/share/zsh/site-functions/_vndroid` (zsh completion)
  - `/usr/local/share/bash-completion/completions/vndroid` (bash completion)
- - `/usr/local/share/applications/vndroid.desktop` (app-without-console desktop
-   entry file)
- - `/usr/local/share/applications/vndroid-console.desktop` (app-with-console
-   desktop entry file)
 
 You can then run `vndroid`.
 

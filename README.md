@@ -2,7 +2,7 @@
 
 VNdroid is a fork of [scrcpy v5.0.1](https://github.com/Genymobile/scrcpy), created by Romain Vimont and Genymobile. All credit for the original work goes to them.
 
-This application mirrors Android devices (video and audio) connected via USB or [TCP/IP](doc/connection.md#tcpip-wireless) and allows control using the computer's keyboard and mouse. It does not require _root_ access or an app installed on the device. It works on _Linux_, _Windows_, and _macOS_.
+This application mirrors Android devices (video and audio) connected via USB or [TCP/IP](doc/connection.md#tcpip-wireless) and allows control using the computer's keyboard and mouse. It does not require _root_ access or an app installed on the device. It works on _Windows_ and _macOS_.
 
 ## Prerequisites
 
@@ -20,7 +20,7 @@ Note that USB debugging is not required to run VNdroid in [OTG mode](doc/otg.md)
 
 ## Build and run
 
-See [doc/build.md](doc/build.md), then the platform notes for [Linux](doc/linux.md), [Windows](doc/windows.md) and [macOS](doc/macos.md).
+See [doc/build.md](doc/build.md), then the platform notes for [Windows](doc/windows.md) and [macOS](doc/macos.md).
 
 ## Documentation
 
@@ -38,7 +38,6 @@ See [doc/build.md](doc/build.md), then the platform notes for [Linux](doc/linux.
  - [Tunnels](doc/tunnels.md)
  - [OTG](doc/otg.md)
  - [Camera](doc/camera.md)
- - [Video4Linux](doc/v4l2.md)
  - [Shortcuts](doc/shortcuts.md)
  - [Developers](doc/develop.md)
 
