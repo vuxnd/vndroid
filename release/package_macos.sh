@@ -28,6 +28,8 @@ cp "$BUILD_DIR/dist/vndroid" "$BUILD_DIR/dist/adb" \
 # Not named VNdroid: it would overwrite vndroid on a case-insensitive volume
 cp app/data/macos/launcher "$APP/Contents/MacOS/VNdroid-launcher"
 chmod +x "$APP/Contents/MacOS/VNdroid-launcher"
+cp app/data/macos/update "$APP/Contents/MacOS/vndroid-update"
+chmod +x "$APP/Contents/MacOS/vndroid-update"
 
 sed "s/@VERSION@/${VERSION#v}/g" app/data/macos/Info.plist > "$APP/Contents/Info.plist"
 

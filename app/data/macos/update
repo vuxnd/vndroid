@@ -1,0 +1,47 @@
+#!/bin/bash
+# Usage: vndroid-update <dmg> <bundle> <pid>
+# Started by VNdroid when the user accepts an update: waits for it to exit,
+# replaces the bundle with the one in the dmg, then reopens it.
+# The body is a function so bash has read the whole script before the bundle
+# that holds it is moved.
+main() {
+    local DMG="$1" B="$2" PID="$3" MNT="" TEXT
+
+    fail() {
+        if [[ -n $MNT ]]
+        then
+            hdiutil detach -quiet "$MNT" || hdiutil detach -quiet -force "$MNT"
+            rmdir "$MNT"
+        fi
+        TEXT="Update failed: $1"
+        TEXT="${TEXT//\\/\\\\}"
+        TEXT="${TEXT//\"/\\\"}"
+        osascript -e "display dialog \"$TEXT\" with title \"VNdroid\" buttons {\"OK\"} default button 1 with icon stop"
+        exit 1
+    }
+
+    while kill -0 "$PID" 2>/dev/null
+    do
+        sleep 0.2
+    done
+
+    MNT="$(mktemp -d)" || fail "cannot create a mount point"
+    hdiutil attach -nobrowse -readonly -noautoopen -quiet -mountpoint "$MNT" "$DMG" \
+        || { rmdir "$MNT"; MNT=""; fail "cannot open $DMG"; }
+
+    rm -rf "$B.new" "$B.old"
+    ditto "$MNT/VNdroid.app" "$B.new" \
+        || { rm -rf "$B.new"; fail "cannot copy the new version next to $B"; }
+    mv "$B" "$B.old" \
+        || { rm -rf "$B.new"; fail "cannot move $B aside"; }
+    mv "$B.new" "$B" \
+        || { mv "$B.old" "$B"; rm -rf "$B.new"; fail "cannot install the new version in $B"; }
+    rm -rf "$B.old"
+
+    hdiutil detach -quiet "$MNT" && rmdir "$MNT"
+    rm -f "$DMG"
+    open "$B"
+}
+
+main "$@"
+exit
