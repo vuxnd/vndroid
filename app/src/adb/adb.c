@@ -108,12 +108,7 @@ show_adb_installation_msg(void) {
         const char *binary;
         const char *command;
     } pkg_managers[] = {
-        {"apt", "apt install adb"},
-        {"apt-get", "apt-get install adb"},
         {"brew", "brew install --cask android-platform-tools"},
-        {"dnf", "dnf install android-tools"},
-        {"emerge", "emerge dev-util/android-tools"},
-        {"pacman", "pacman -S android-tools"},
     };
     for (size_t i = 0; i < ARRAY_LEN(pkg_managers); ++i) {
         if (sc_file_executable_exists(pkg_managers[i].binary)) {

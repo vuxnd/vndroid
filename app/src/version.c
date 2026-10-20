@@ -4,9 +4,6 @@
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
-#ifdef HAVE_V4L2
-# include <libavdevice/avdevice.h>
-#endif
 #ifdef HAVE_USB
 # include <libusb-1.0/libusb.h>
 #endif
@@ -51,17 +48,6 @@ vndroid_print_version(void) {
            AV_VERSION_MAJOR(avutil),
            AV_VERSION_MINOR(avutil),
            AV_VERSION_MICRO(avutil));
-
-#ifdef HAVE_V4L2
-    unsigned avdevice = avdevice_version();
-    printf(" - libavdevice: %u.%u.%u / %u.%u.%u\n",
-           LIBAVDEVICE_VERSION_MAJOR,
-           LIBAVDEVICE_VERSION_MINOR,
-           LIBAVDEVICE_VERSION_MICRO,
-           AV_VERSION_MAJOR(avdevice),
-           AV_VERSION_MINOR(avdevice),
-           AV_VERSION_MICRO(avdevice));
-#endif
 
 #ifdef HAVE_USB
     const struct libusb_version *usb = libusb_get_version();

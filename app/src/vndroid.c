@@ -44,9 +44,6 @@
 #include "util/term.h"
 #include "util/timeout.h"
 #include "util/tick.h"
-#ifdef HAVE_V4L2
-# include "v4l2_sink.h"
-#endif
 #include "video_regulator.h"
 
 #define SC_BACKPRESSURE_THRESHOLD 8 // in-flight frames in video regulator
@@ -62,10 +59,6 @@ struct vndroid {
     struct sc_hwdec hwdec;
     struct sc_recorder recorder;
     struct sc_video_regulator video_regulator;
-#ifdef HAVE_V4L2
-    struct sc_v4l2_sink v4l2_sink;
-    struct sc_video_regulator v4l2_regulator;
-#endif
     struct sc_controller controller;
     struct sc_file_pusher file_pusher;
 #ifdef HAVE_USB
@@ -396,10 +389,6 @@ vndroid(struct vndroid_options *options) {
     bool file_pusher_initialized = false;
     bool recorder_initialized = false;
     bool recorder_started = false;
-#ifdef HAVE_V4L2
-    bool v4l2_sink_initialized = false;
-    bool v4l2_regulator_initialized = false;
-#endif
     bool video_regulator_initialized = false;
     bool video_demuxer_started = false;
     bool audio_demuxer_started = false;
@@ -592,9 +581,6 @@ vndroid(struct vndroid_options *options) {
     }
 
     bool has_video_buffer = options->video_buffer;
-#ifdef HAVE_V4L2
-    has_video_buffer |= options->v4l2_buffer;
-#endif
 
     if (options->video) {
         static const struct sc_demuxer_callbacks video_demuxer_cbs = {
@@ -850,9 +836,6 @@ aoa_complete:
 
     bool needs_video_decoder = options->video_playback;
     bool needs_audio_decoder = options->audio_playback;
-#ifdef HAVE_V4L2
-    needs_video_decoder |= !!options->v4l2_device;
-#endif
     if (needs_video_decoder) {
         struct sc_screen *screen = options->video_playback ? &s->screen : NULL;
         assert(!screen || screen_initialized);
@@ -902,14 +885,6 @@ aoa_complete:
         struct sc_frame_source *src = &s->video_decoder.frame_source;
         if (options->video_buffer) {
             uint32_t backpressure_threshold = SC_BACKPRESSURE_THRESHOLD;
-#ifdef HAVE_V4L2
-            if (options->v4l2_device && options->v4l2_buffer
-                    && options->v4l2_buffer < options->video_buffer) {
-                // Disable the backpressure threshold for this video regulator,
-                // it will be handled by the v4l2 video regulator
-                backpressure_threshold = 0; // disabled
-            }
-#endif
             if (!sc_video_regulator_init(&s->video_regulator,
                                          options->video_buffer, true,
                                          backpressure_threshold)) {
@@ -929,37 +904,6 @@ aoa_complete:
         sc_frame_source_add_sink(&s->audio_decoder.frame_source,
                                  &s->audio_player.frame_sink);
     }
-
-#ifdef HAVE_V4L2
-    if (options->v4l2_device) {
-        if (!sc_v4l2_sink_init(&s->v4l2_sink, options->v4l2_device)) {
-            goto end;
-        }
-
-        struct sc_frame_source *src = &s->video_decoder.frame_source;
-        if (options->v4l2_buffer) {
-            uint32_t backpressure_threshold = SC_BACKPRESSURE_THRESHOLD;
-            if (options->video_playback && options->video_buffer
-                    && options->video_buffer <= options->v4l2_buffer) {
-                // Disable the backpressure threshold for this video
-                // regulator, it will be handled by the display video regulator
-                backpressure_threshold = 0; // disabled
-            }
-            if (!sc_video_regulator_init(&s->v4l2_regulator,
-                                         options->v4l2_buffer,
-                                         true, backpressure_threshold)) {
-                goto end;
-            }
-            v4l2_regulator_initialized = true;
-            sc_frame_source_add_sink(src, &s->v4l2_regulator.frame_sink);
-            src = &s->v4l2_regulator.frame_source;
-        }
-
-        sc_frame_source_add_sink(src, &s->v4l2_sink.frame_sink);
-
-        v4l2_sink_initialized = true;
-    }
-#endif
 
     // Now that the header values have been consumed, the socket(s) will
     // receive the stream(s). Start the demuxer(s).
@@ -1071,11 +1015,6 @@ end:
     if (video_regulator_initialized) {
         sc_video_regulator_stop(&s->video_regulator);
     }
-#ifdef HAVE_V4L2
-    if (v4l2_regulator_initialized) {
-        sc_video_regulator_stop(&s->v4l2_regulator);
-    }
-#endif
     if (recorder_initialized) {
         sc_recorder_stop(&s->recorder);
     }
@@ -1127,15 +1066,6 @@ end:
     if (video_regulator_initialized) {
         sc_video_regulator_destroy(&s->video_regulator);
     }
-
-#ifdef HAVE_V4L2
-    if (v4l2_regulator_initialized) {
-        sc_video_regulator_destroy(&s->v4l2_regulator);
-    }
-    if (v4l2_sink_initialized) {
-        sc_v4l2_sink_destroy(&s->v4l2_sink);
-    }
-#endif
 
 #ifdef HAVE_USB
     if (aoa_hid_initialized) {

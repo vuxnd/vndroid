@@ -72,10 +72,6 @@ const struct vndroid_options vndroid_options_default = {
     .audio_output_buffer = SC_TICK_FROM_MS(10),
     .time_limit = 0,
     .screen_off_timeout = -1,
-#ifdef HAVE_V4L2
-    .v4l2_device = NULL,
-    .v4l2_buffer = 0,
-#endif
 #ifdef HAVE_USB
     .otg = false,
 #endif

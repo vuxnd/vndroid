@@ -22,12 +22,12 @@ import java.nio.charset.StandardCharsets;
 
 public final class UhidManager {
 
-    // Linux: include/uapi/linux/uhid.h
+    // Kernel: include/uapi/linux/uhid.h
     private static final int UHID_OUTPUT = 6;
     private static final int UHID_CREATE2 = 11;
     private static final int UHID_INPUT2 = 12;
 
-    // Linux: include/uapi/linux/input.h
+    // Kernel: include/uapi/linux/input.h
     private static final short BUS_VIRTUAL = 0x06;
 
     private static final int SIZE_OF_UHID_EVENT = 4380; // sizeof(struct uhid_event)
@@ -233,7 +233,7 @@ public final class UhidManager {
     }
 
     public void close(int id) {
-        // Linux: Documentation/hid/uhid.rst
+        // Kernel: Documentation/hid/uhid.rst
         // If you close() the fd, the device is automatically unregistered and destroyed internally.
         FileDescriptor fd = fds.remove(id);
         if (fd != null) {

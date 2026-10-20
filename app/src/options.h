@@ -74,7 +74,6 @@ enum sc_audio_source {
 enum sc_hwdec_mode {
     SC_HWDEC_MODE_AUTO,
     SC_HWDEC_MODE_DISABLED,
-    SC_HWDEC_MODE_VAAPI,
     SC_HWDEC_MODE_D3D11VA,
     SC_HWDEC_MODE_VIDEOTOOLBOX,
 };
@@ -86,8 +85,6 @@ sc_hwdec_mode_get_name(enum sc_hwdec_mode mode) {
             return "auto";
         case SC_HWDEC_MODE_DISABLED:
             return "disabled";
-        case SC_HWDEC_MODE_VAAPI:
-            return "vaapi";
         case SC_HWDEC_MODE_D3D11VA:
             return "d3d11va";
         case SC_HWDEC_MODE_VIDEOTOOLBOX:
@@ -317,10 +314,6 @@ struct vndroid_options {
     sc_tick audio_output_buffer;
     sc_tick time_limit;
     sc_tick screen_off_timeout;
-#ifdef HAVE_V4L2
-    const char *v4l2_device;
-    sc_tick v4l2_buffer;
-#endif
 #ifdef HAVE_USB
     bool otg;
 #endif

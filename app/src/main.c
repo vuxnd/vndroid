@@ -2,9 +2,6 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#ifdef HAVE_V4L2
-# include <libavdevice/avdevice.h>
-#endif
 #include <SDL3/SDL.h>
 
 #include "cli.h"
@@ -74,12 +71,6 @@ main_vndroid(int argc, char *argv[]) {
         ret = VNDROID_EXIT_SUCCESS;
         goto end;
     }
-
-#ifdef HAVE_V4L2
-    if (args.opts.v4l2_device) {
-        avdevice_register_all();
-    }
-#endif
 
     if (!net_init()) {
         ret = VNDROID_EXIT_FAILURE;

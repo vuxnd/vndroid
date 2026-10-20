@@ -66,7 +66,7 @@ sc_term_stdout_isatty(void) {
 // Return true if VT/ANSI escape sequences written to stdout are processed by
 // the terminal (rather than printed verbatim).
 //
-// On Linux, a tty always processes escape sequences, so this is equivalent to
+// On macOS, a tty always processes escape sequences, so this is equivalent to
 // sc_term_stdout_isatty(). On Windows, VT processing must be explicitly enabled
 // (and is not supported by legacy console hosts), otherwise the escape
 // sequences would be printed verbatim.

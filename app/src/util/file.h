@@ -16,7 +16,7 @@
  * Indicate if an executable exists using $PATH
  *
  * In practice, it is only used to know if a package manager is available on
- * the system. It is only implemented on Linux.
+ * the system. It is not implemented on Windows.
  */
 bool
 sc_file_executable_exists(const char *file);

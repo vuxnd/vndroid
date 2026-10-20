@@ -99,8 +99,6 @@ _vndroid() {
         --time-limit=
         --tunnel-host=
         --tunnel-port=
-        --v4l2-buffer=
-        --v4l2-sink=
         -v --version
         -V --verbosity=
         --video-buffer=
@@ -207,7 +205,7 @@ _vndroid() {
             return
             ;;
         --hwdec)
-            COMPREPLY=($(compgen -W 'auto disabled vaapi d3d11va videotoolbox' -- "$cur"))
+            COMPREPLY=($(compgen -W 'auto disabled d3d11va videotoolbox' -- "$cur"))
             return
             ;;
         --audio-bit-rate \
@@ -234,8 +232,6 @@ _vndroid() {
         |--screen-off-timeout \
         |--tunnel-host \
         |--tunnel-port \
-        |--v4l2-buffer \
-        |--v4l2-sink \
         |--video-buffer \
         |--video-codec-options \
         |--video-encoder \

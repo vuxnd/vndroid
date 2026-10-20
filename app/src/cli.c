@@ -43,9 +43,7 @@ enum {
     OPT_LEGACY_PASTE,
     OPT_VIDEO_ENCODER,
     OPT_POWER_OFF_ON_CLOSE,
-    OPT_V4L2_SINK,
     OPT_VIDEO_BUFFER,
-    OPT_V4L2_BUFFER,
     OPT_TUNNEL_HOST,
     OPT_TUNNEL_PORT,
     OPT_NO_CLIPBOARD_AUTOSYNC,
@@ -420,7 +418,7 @@ static const struct sc_option options[] = {
         .text = "Select how to send gamepad inputs to the device.\n"
                 "Possible values are \"disabled\", \"uhid\" and \"aoa\".\n"
                 "\"disabled\" does not send gamepad inputs to the device.\n"
-                "\"uhid\" simulates physical HID gamepads using the Linux UHID "
+                "\"uhid\" simulates physical HID gamepads using the UHID "
                 "kernel module on the device.\n"
                 "\"aoa\" simulates physical gamepads using the AOAv2 protocol."
                 "It may only work over USB.\n"
@@ -438,9 +436,8 @@ static const struct sc_option options[] = {
         .text = "Configure hardware video decoding on the computer.\n"
                 "Possible values are \"auto\" (the first available hardware "
                 "decoder, software decoding otherwise), \"disabled\" "
-                "(always use software decoding), \"vaapi\" (Linux only), "
-                "\"d3d11va\" (Windows only) and \"videotoolbox\" (macOS "
-                "only).\n"
+                "(always use software decoding), \"d3d11va\" (Windows "
+                "only) and \"videotoolbox\" (macOS only).\n"
                 "Default is \"auto\".",
     },
     {
@@ -469,8 +466,8 @@ static const struct sc_option options[] = {
                 "\"disabled\" does not send keyboard inputs to the device.\n"
                 "\"sdk\" uses the Android system API to deliver keyboard "
                 "events to applications.\n"
-                "\"uhid\" simulates a physical HID keyboard using the Linux "
-                "UHID kernel module on the device.\n"
+                "\"uhid\" simulates a physical HID keyboard using the UHID "
+                "kernel module on the device.\n"
                 "\"aoa\" simulates a physical keyboard using the AOAv2 "
                 "protocol. It may only work over USB.\n"
                 "For \"uhid\" and \"aoa\", the keyboard layout must be "
@@ -565,7 +562,7 @@ static const struct sc_option options[] = {
                 "\"disabled\" does not send mouse inputs to the device.\n"
                 "\"sdk\" uses the Android system API to deliver mouse events"
                 "to applications.\n"
-                "\"uhid\" simulates a physical HID mouse using the Linux UHID "
+                "\"uhid\" simulates a physical HID mouse using the UHID "
                 "kernel module on the device.\n"
                 "\"aoa\" simulates a physical mouse using the AOAv2 protocol. "
                 "It may only work over USB.\n"
@@ -963,24 +960,6 @@ static const struct sc_option options[] = {
 #else
                 "Default is info.",
 #endif
-    },
-    {
-        .longopt_id = OPT_V4L2_SINK,
-        .longopt = "v4l2-sink",
-        .argdesc = "/dev/videoN",
-        .text = "Output to v4l2loopback device.\n"
-                "This feature is only available on Linux.",
-    },
-    {
-        .longopt_id = OPT_V4L2_BUFFER,
-        .longopt = "v4l2-buffer",
-        .argdesc = "ms",
-        .text = "Add a buffering delay (in milliseconds) before pushing "
-                "frames. This increases latency to compensate for jitter.\n"
-                "This option is similar to --video-buffer, but specific to "
-                "V4L2 sink.\n"
-                "Default is 0 (no buffering).\n"
-                "This option is only available on Linux.",
     },
     {
         .longopt_id = OPT_VIDEO_BUFFER,
@@ -2512,16 +2491,6 @@ parse_hwdec_mode(const char *optarg, enum sc_hwdec_mode *mode) {
         return true;
     }
 
-    if (!strcmp(optarg, "vaapi")) {
-#ifdef HAVE_VAAPI
-        *mode = SC_HWDEC_MODE_VAAPI;
-        return true;
-#else
-        LOGE("VA-API support is disabled on this platform.");
-        return false;
-#endif
-    }
-
     if (!strcmp(optarg, "d3d11va")) {
 #ifdef HAVE_D3D11VA
         *mode = SC_HWDEC_MODE_D3D11VA;
@@ -2542,8 +2511,8 @@ parse_hwdec_mode(const char *optarg, enum sc_hwdec_mode *mode) {
 #endif
     }
 
-    LOGE("Unsupported hwdec mode: %s (expected auto, disabled, vaapi, d3d11va "
-         "or videotoolbox)", optarg);
+    LOGE("Unsupported hwdec mode: %s (expected auto, disabled, d3d11va or "
+         "videotoolbox)", optarg);
     return false;
 }
 
@@ -2833,26 +2802,6 @@ parse_args_with_getopt(struct vndroid_cli_args *args, int argc, char *argv[],
                 LOGE("OTG mode (--otg) is disabled.");
                 return false;
 #endif
-            case OPT_V4L2_SINK:
-#ifdef HAVE_V4L2
-                opts->v4l2_device = optarg;
-                break;
-#else
-                LOGE("V4L2 (--v4l2-sink) is disabled (or unsupported on this "
-                     "platform).");
-                return false;
-#endif
-            case OPT_V4L2_BUFFER:
-#ifdef HAVE_V4L2
-                if (!parse_buffering_time(optarg, &opts->v4l2_buffer)) {
-                    return false;
-                }
-                break;
-#else
-                LOGE("V4L2 (--v4l2-buffer) is disabled (or unsupported on this "
-                     "platform).");
-                return false;
-#endif
             case OPT_LIST_ENCODERS:
                 opts->list |= SC_OPTION_LIST_ENCODERS;
                 break;
@@ -3039,12 +2988,8 @@ parse_args_with_getopt(struct vndroid_cli_args *args, int argc, char *argv[],
     }
 
     bool otg = false;
-    bool v4l2 = false;
 #ifdef HAVE_USB
     otg = opts->otg;
-#endif
-#ifdef HAVE_V4L2
-    v4l2 = !!opts->v4l2_device;
 #endif
 
     if (!opts->window) {
@@ -3064,9 +3009,8 @@ parse_args_with_getopt(struct vndroid_cli_args *args, int argc, char *argv[],
         opts->audio_playback = false;
     }
 
-    if (opts->video && !opts->video_playback && !opts->record_filename
-            && !v4l2) {
-        LOGI("No video playback, no recording, no V4L2 sink: video disabled");
+    if (opts->video && !opts->video_playback && !opts->record_filename) {
+        LOGI("No video playback, no recording: video disabled");
         opts->video = false;
     }
 
@@ -3105,40 +3049,8 @@ parse_args_with_getopt(struct vndroid_cli_args *args, int argc, char *argv[],
                 return false;
             }
             opts->hwdec_mode = SC_HWDEC_MODE_DISABLED;
-        } else if (v4l2) {
-            if (opts->hwdec_mode != SC_HWDEC_MODE_AUTO) {
-                LOGE("Hardware decoding is not compatible with V4L2");
-                return false;
-            }
-            LOGI("V4L2 sink enabled, hardware decoding disabled");
-            opts->hwdec_mode = SC_HWDEC_MODE_DISABLED;
         }
     }
-
-#ifdef HAVE_V4L2
-    if (v4l2) {
-        if (!opts->video) {
-            LOGE("V4L2 sink requires video capture, but --no-video was set.");
-            return false;
-        }
-
-        if (opts->flex_display) {
-            LOGE("V4L2 is incompatible with -x/--flex-display because it does "
-                 "not support resizing");
-            return false;
-        }
-
-        // V4L2 could not handle size change.
-        // Do not log because downsizing on error is the default behavior,
-        // not an explicit request from the user.
-        opts->downsize_on_error = false;
-    }
-
-    if (opts->v4l2_buffer && !opts->v4l2_device) {
-        LOGE("V4L2 buffer value without V4L2 sink");
-        return false;
-    }
-#endif
 
     if (opts->control && opts->video_source == SC_VIDEO_SOURCE_DISPLAY) {
         if (opts->keyboard_input_mode == SC_KEYBOARD_INPUT_MODE_AUTO) {
@@ -3567,10 +3479,6 @@ parse_args_with_getopt(struct vndroid_cli_args *args, int argc, char *argv[],
         }
         if (opts->display_id) {
             LOGE("OTG mode: could not select display");
-            return false;
-        }
-        if (v4l2) {
-            LOGE("OTG mode: could not sink to V4L2 device");
             return false;
         }
     }

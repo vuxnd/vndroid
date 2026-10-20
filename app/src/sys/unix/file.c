@@ -6,7 +6,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
 #ifdef __APPLE__
 # include <mach-o/dyld.h> // for _NSGetExecutablePath()
 #endif
@@ -55,16 +54,7 @@ sc_file_executable_exists(const char *file) {
 char *
 sc_file_get_executable_path(void) {
 // <https://stackoverflow.com/a/1024937/1987178>
-#ifdef __linux__
-    char buf[PATH_MAX + 1]; // +1 for the null byte
-    ssize_t len = readlink("/proc/self/exe", buf, PATH_MAX);
-    if (len == -1) {
-        perror("readlink");
-        return NULL;
-    }
-    buf[len] = '\0';
-    return strdup(buf);
-#elif defined(__APPLE__)
+#ifdef __APPLE__
     char buf[PATH_MAX];
     uint32_t bufsize = PATH_MAX;
     if (_NSGetExecutablePath(buf, &bufsize) != 0) {

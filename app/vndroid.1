@@ -227,7 +227,7 @@ Select how to send gamepad inputs to the device.
 Possible values are "disabled", "uhid" and "aoa":
 
  - "disabled" does not send gamepad inputs to the device.
- - "uhid" simulates physical HID gamepads using the Linux HID kernel module on the device.
+ - "uhid" simulates physical HID gamepads using the UHID kernel module on the device.
  - "aoa" simulates physical HID gamepads using the AOAv2 protocol. It may only work over USB.
 
 Also see \fB\-\-keyboard\fR and R\fB\-\-mouse\fR.
@@ -239,7 +239,7 @@ Print this help.
 .BI "\-\-hwdec " mode
 Configure hardware video decoding on the computer.
 
-Possible values are "auto" (the first available hardware decoder, software decoding otherwise), "disabled" (always use software decoding), "vaapi" (Linux only), "d3d11va" (Windows only) and "videotoolbox" (macOS only).
+Possible values are "auto" (the first available hardware decoder, software decoding otherwise), "disabled" (always use software decoding), "d3d11va" (Windows only) and "videotoolbox" (macOS only).
 
 Default is "auto".
 
@@ -267,7 +267,7 @@ Possible values are "disabled", "sdk", "uhid" and "aoa":
 
  - "disabled" does not send keyboard inputs to the device.
  - "sdk" uses the Android system API to deliver keyboard events to applications.
- - "uhid" simulates a physical HID keyboard using the Linux HID kernel module on the device.
+ - "uhid" simulates a physical HID keyboard using the UHID kernel module on the device.
  - "aoa" simulates a physical HID keyboard using the AOAv2 protocol. It may only work over USB.
 
 For "uhid" and "aoa", the keyboard layout must be configured (once and for all) on the device, via Settings -> System -> Languages and input -> Physical keyboard. This settings page can be started directly using the shortcut MOD+k (except in OTG mode), or by executing:
@@ -344,7 +344,7 @@ Possible values are "disabled", "sdk", "uhid" and "aoa":
 
  - "disabled" does not send mouse inputs to the device.
  - "sdk" uses the Android system API to deliver mouse events to applications.
- - "uhid" simulates a physical HID mouse using the Linux HID kernel module on the device.
+ - "uhid" simulates a physical HID mouse using the UHID kernel module on the device.
  - "aoa" simulates a physical mouse using the AOAv2 protocol. It may only work over USB.
 
 In "uhid" and "aoa" modes, the computer mouse is captured to control the device directly (relative mouse mode).
@@ -649,18 +649,6 @@ Print the version of VNdroid.
 Set the log level ("verbose", "debug", "info", "warn" or "error").
 
 Default is "info" for release builds, "debug" for debug builds.
-
-.TP
-.BI "\-\-v4l2-sink " /dev/videoN
-Output to v4l2loopback device.
-
-.TP
-.BI "\-\-v4l2-buffer " ms
-Add a buffering delay (in milliseconds) before pushing frames. This increases latency to compensate for jitter.
-
-This option is similar to \fB\-\-video\-buffer\fR, but specific to V4L2 sink.
-
-Default is 0 (no buffering).
 
 .TP
 .BI "\-\-video\-buffer " ms
