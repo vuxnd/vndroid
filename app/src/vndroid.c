@@ -361,7 +361,7 @@ sc_init_video_hwdec(struct sc_hwdec *hwdec, enum sc_hwdec_mode mode,
     }
 
     // Initialize software decoder
-    return sc_hwdec_init(hwdec, AV_HWDEVICE_TYPE_NONE, NULL, false, NULL);
+    return sc_hwdec_init(hwdec, AV_HWDEVICE_TYPE_NONE, false, NULL);
 }
 
 enum vndroid_exit_code
