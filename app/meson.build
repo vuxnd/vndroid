@@ -35,6 +35,8 @@ src = [
     'src/sdl_hints.c',
     'src/server.c',
     'src/texture.c',
+    'src/update.c',
+    'src/update_util.c',
     'src/version.c',
     'src/video_regulator.c',
     'src/hid/hid_gamepad.c',
@@ -63,6 +65,7 @@ src = [
     'src/util/process_intr.c',
     'src/util/rand.c',
     'src/util/sdl.c',
+    'src/util/sha256.c',
     'src/util/strbuf.c',
     'src/util/str.c',
     'src/util/term.c',
@@ -268,6 +271,10 @@ if get_option('buildtype') == 'debug'
             'tests/test_orientation.c',
             'src/options.c',
         ]],
+        ['test_sha256', [
+            'tests/test_sha256.c',
+            'src/util/sha256.c',
+        ]],
         ['test_strbuf', [
             'tests/test_strbuf.c',
             'src/util/strbuf.c',
@@ -276,6 +283,11 @@ if get_option('buildtype') == 'debug'
             'tests/test_str.c',
             'src/util/str.c',
             'src/util/strbuf.c',
+        ]],
+        ['test_update_util', [
+            'tests/test_update_util.c',
+            'src/update_util.c',
+            'src/util/log.c',
         ]],
         ['test_vecdeque', [
             'tests/test_vecdeque.c',
