@@ -66,6 +66,7 @@ _vndroid() {
         --no-mouse-hover
         --no-power-on
         --no-terminal-title
+        --no-update-check
         --no-vd-destroy-content
         --no-vd-system-decorations
         --no-video

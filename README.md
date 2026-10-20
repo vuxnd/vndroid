@@ -41,6 +41,10 @@ See [doc/build.md](doc/build.md), then the platform notes for [Windows](doc/wind
  - [Shortcuts](doc/shortcuts.md)
  - [Developers](doc/develop.md)
 
+## Updates
+
+Once the window opens, VNdroid checks GitHub Releases for a newer version and offers Update or Later. The download is verified against the release's `SHA256SUMS.txt`, then VNdroid restarts into the new version. This works for the installed macOS VNdroid.app and the Windows zip. Press <kbd>MOD</kbd>+<kbd>u</kbd> to check at any time. Pass `--no-update-check` to disable the startup check.
+
 ## License
 
 Copyright (C) 2018 Genymobile. Copyright (C) 2018-2026 Romain Vimont. Licensed under the Apache License, Version 2.0, see [LICENSE](LICENSE).
