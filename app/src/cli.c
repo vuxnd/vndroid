@@ -110,6 +110,7 @@ enum {
     OPT_IGNORE_VIDEO_ENCODER_CONSTRAINTS,
     OPT_NO_TERMINAL_TITLE,
     OPT_HWDEC,
+    OPT_NO_UPDATE_CHECK,
 };
 
 struct sc_option {
@@ -684,6 +685,12 @@ static const struct sc_option options[] = {
         .text = "Disable terminal title updates.",
     },
     {
+        .longopt_id = OPT_NO_UPDATE_CHECK,
+        .longopt = "no-update-check",
+        .text = "Disable the automatic check for a new VNdroid release at "
+                "startup. MOD+u still checks on demand.",
+    },
+    {
         .longopt_id = OPT_NO_VD_DESTROY_CONTENT,
         .longopt = "no-vd-destroy-content",
         .text = "Disable virtual display \"destroy content on removal\" "
@@ -1182,6 +1189,10 @@ static const struct sc_shortcut shortcuts[] = {
     {
         .shortcuts = { "MOD+i" },
         .text = "Enable/disable FPS counter (print frames/second in logs)",
+    },
+    {
+        .shortcuts = { "MOD+u" },
+        .text = "Check for updates",
     },
     {
         .shortcuts = { "Ctrl+click-and-move" },
@@ -2953,6 +2964,9 @@ parse_args_with_getopt(struct vndroid_cli_args *args, int argc, char *argv[],
                 break;
             case OPT_NO_TERMINAL_TITLE:
                 opts->update_terminal_title = false;
+                break;
+            case OPT_NO_UPDATE_CHECK:
+                opts->update_check = false;
                 break;
             case OPT_HWDEC:
                 if (!parse_hwdec_mode(optarg, &opts->hwdec_mode)) {

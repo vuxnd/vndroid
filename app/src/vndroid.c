@@ -30,6 +30,7 @@
 #include "uhid/gamepad_uhid.h"
 #include "uhid/keyboard_uhid.h"
 #include "uhid/mouse_uhid.h"
+#include "update.h"
 #ifdef HAVE_USB
 # include "usb/aoa_hid.h"
 # include "usb/gamepad_aoa.h"
@@ -111,7 +112,12 @@ sdl_configure_ctrl_c_windows(void) {
 #endif // _WIN32
 
 static enum vndroid_exit_code
-event_loop(struct vndroid *s, bool has_screen) {
+event_loop(struct vndroid *s, bool has_screen, bool auto_update_check) {
+    if (auto_update_check && s->screen.window_shown) {
+        sc_update_check(false);
+        auto_update_check = false;
+    }
+
     SDL_Event event;
     while (SDL_WaitEvent(&event)) {
         switch (event.type) {
@@ -142,6 +148,19 @@ event_loop(struct vndroid *s, bool has_screen) {
             case SDL_EVENT_QUIT:
                 LOGD("User requested to quit");
                 return VNDROID_EXIT_SUCCESS;
+            case SC_EVENT_OPEN_WINDOW:
+                if (has_screen) {
+                    sc_screen_handle_event(&s->screen, &event);
+                }
+                if (auto_update_check && s->screen.window_shown) {
+                    sc_update_check(false);
+                    auto_update_check = false;
+                }
+                break;
+            case SC_EVENT_UPDATE_CHECKED:
+            case SC_EVENT_UPDATE_DOWNLOADED:
+                sc_update_handle_event(&event);
+                break;
             default:
                 if (has_screen) {
                     sc_screen_handle_event(&s->screen, &event);
@@ -406,6 +425,7 @@ vndroid(struct vndroid_options *options) {
     bool screen_initialized = false;
     bool timeout_initialized = false;
     bool timeout_started = false;
+    bool update_initialized = false;
     bool disconnected = false;
 
     struct sc_acksync *acksync = NULL;
@@ -977,7 +997,13 @@ aoa_complete:
         }
     }
 
-    ret = event_loop(s, options->window);
+    if (!sc_update_init()) {
+        goto end;
+    }
+    update_initialized = true;
+
+    ret = event_loop(s, options->window,
+                     options->window && options->update_check);
 
     // Reject all new runnables, and execute the pending ones now
     // (they could access memory that will be cleaned up below)
@@ -1133,6 +1159,10 @@ end:
     }
 
     sc_server_destroy(&s->server);
+
+    if (update_initialized) {
+        sc_update_destroy();
+    }
 
     return ret;
 }

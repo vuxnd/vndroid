@@ -120,6 +120,7 @@ const struct vndroid_options vndroid_options_default = {
     .flex_display = false,
     .ignore_video_encoder_constraints = false,
     .update_terminal_title = true,
+    .update_check = true,
 };
 
 enum sc_orientation

@@ -11,6 +11,7 @@
 #include "input_events.h"
 #include "screen.h"
 #include "shortcut_mod.h"
+#include "update.h"
 #include "util/log.h"
 #include "util/sdl.h"
 
@@ -527,6 +528,11 @@ sc_input_manager_process_key(struct sc_input_manager *im,
                 return;
             case SDLK_Q:
                 sc_push_event(SDL_EVENT_QUIT);
+                return;
+            case SDLK_U:
+                if (!shift && !repeat && down) {
+                    sc_update_check(true);
+                }
                 return;
         }
 

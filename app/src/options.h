@@ -366,6 +366,7 @@ struct vndroid_options {
     bool flex_display;
     bool ignore_video_encoder_constraints;
     bool update_terminal_title;
+    bool update_check;
 };
 
 extern const struct vndroid_options vndroid_options_default;

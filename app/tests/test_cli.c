@@ -121,6 +121,25 @@ static void test_options2(void) {
     assert(opts->record_format == SC_RECORD_FORMAT_MP4);
 }
 
+static void test_no_update_check(void) {
+    struct vndroid_cli_args args = {
+        .opts = vndroid_options_default,
+        .help = false,
+        .version = false,
+    };
+
+    assert(args.opts.update_check);
+
+    char *argv[] = {
+        "vndroid",
+        "--no-update-check",
+    };
+
+    bool ok = vndroid_parse_args(&args, ARRAY_LEN(argv), argv);
+    assert(ok);
+    assert(!args.opts.update_check);
+}
+
 static void test_parse_shortcut_mods(void) {
     uint8_t mods;
     bool ok;
@@ -157,6 +176,7 @@ int main(int argc, char *argv[]) {
     test_flag_help();
     test_options();
     test_options2();
+    test_no_update_check();
     test_parse_shortcut_mods();
     return 0;
 }
