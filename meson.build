@@ -1,5 +1,5 @@
 project('vndroid', 'c',
-        version: '0.1',
+        version: '0.1.0',
         meson_version: '>= 0.49',
         default_options: [
             'c_std=c11',
