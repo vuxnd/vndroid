@@ -409,7 +409,7 @@ jobs:
     needs:
       - build-vndroid-server
       - build-macos-aarch64
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -433,7 +433,7 @@ jobs:
             tar xf dist-tar/dist.tar.gz
 
       - name: Package
-        run: release/package_client.sh macos-aarch64 tar.gz
+        run: release/package_macos.sh aarch64
 
       - name: Upload release
         uses: actions/upload-artifact@v7
@@ -445,7 +445,7 @@ jobs:
     needs:
       - build-vndroid-server
       - build-macos-x86_64
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -469,7 +469,7 @@ jobs:
             tar xf dist-tar/dist.tar.gz
 
       - name: Package
-        run: release/package_client.sh macos-x86_64 tar.gz
+        run: release/package_macos.sh x86_64
 
       - name: Upload release
         uses: actions/upload-artifact@v7

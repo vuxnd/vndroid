@@ -8,7 +8,7 @@ sha256sum "vndroid-server-$VERSION" \
     "vndroid-win32-$VERSION.zip" \
     "vndroid-win64-$VERSION.zip" \
     "vndroid-winarm64-$VERSION.zip" \
-    "vndroid-macos-aarch64-$VERSION.tar.gz" \
-    "vndroid-macos-x86_64-$VERSION.tar.gz" \
+    "vndroid-macos-aarch64-$VERSION.dmg" \
+    "vndroid-macos-x86_64-$VERSION.dmg" \
         | tee SHA256SUMS.txt
 echo "Release checksums generated in $PWD/SHA256SUMS.txt"

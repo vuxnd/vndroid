@@ -2,9 +2,20 @@
 
 ## Install
 
-See [build.md](build.md) to build and install the app.
+Releases are shipped as a `.dmg`: open it, then drag VNdroid to Applications.
 
-You need `adb`, accessible from your `PATH`. If you don't have it yet:
+The app is not notarized, so macOS refuses to open it the first time. Open
+System Settings > Privacy & Security, scroll down, click "Open Anyway", then
+launch the app again. Or, in a terminal:
+
+```bash
+xattr -d com.apple.quarantine /Applications/VNdroid.app
+```
+
+Alternatively, see [build.md](build.md) to build and install the app.
+
+`adb` is bundled inside the app. To run `vndroid` from a terminal, you need
+`adb`, accessible from your `PATH`. If you don't have it yet:
 
 ```bash
 brew install --cask android-platform-tools

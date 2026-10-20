@@ -1,0 +1,22 @@
+#!/bin/bash
+# Launched from the Finder there is no terminal, so an error would be invisible:
+# show the end of the output in a dialog when vndroid fails.
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ -t 2 ]]
+then
+    exec "$DIR/vndroid" "$@"
+fi
+
+LOG="$(mktemp)"
+"$DIR/vndroid" "$@" >"$LOG" 2>&1
+STATUS=$?
+if [[ $STATUS != 0 ]]
+then
+    TEXT="$(tail -n 15 "$LOG")"
+    TEXT="${TEXT//\\/\\\\}"
+    TEXT="${TEXT//\"/\\\"}"
+    osascript -e "display dialog \"$TEXT\" with title \"VNdroid\" buttons {\"OK\"} default button 1 with icon stop"
+fi
+rm -f "$LOG"
+exit $STATUS
