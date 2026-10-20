@@ -803,6 +803,36 @@ get_adb_tcp_port(struct sc_server *server, const char *serial) {
     return value;
 }
 
+// Poll until the user accepts the USB debugging authorization on the device
+static bool
+wait_device_authorized(struct sc_server *server,
+                       const struct sc_adb_device_selector *selector,
+                       struct sc_adb_device *out_device, unsigned attempts,
+                       sc_tick delay) {
+    LOGI("Waiting for the device to be authorized...");
+
+    bool unauthorized;
+    do {
+        sc_tick deadline = sc_tick_now() + delay;
+        if (!sc_server_sleep(server, deadline)) {
+            LOGI("Device authorization waiting interrupted");
+            return false;
+        }
+
+        bool ok = sc_adb_select_device(&server->intr, selector,
+                                       SC_ADB_NO_LOGERR, out_device,
+                                       &unauthorized);
+        if (ok) {
+            return true;
+        }
+    } while (unauthorized && --attempts);
+
+    // Still unauthorized, or another error occurred: retry once with errors
+    // logged, so that the failure is reported
+    return sc_adb_select_device(&server->intr, selector, 0, out_device,
+                                &unauthorized);
+}
+
 static bool
 wait_tcpip_mode_enabled(struct sc_server *server, const char *serial,
                         uint16_t expected_port, unsigned attempts,
@@ -1013,7 +1043,15 @@ run_server(void *data) {
             }
         }
         struct sc_adb_device device;
-        ok = sc_adb_select_device(&server->intr, &selector, 0, &device);
+        bool unauthorized;
+        ok = sc_adb_select_device(&server->intr, &selector, 0, &device,
+                                  &unauthorized);
+        if (!ok && unauthorized) {
+            unsigned attempts = 60;
+            sc_tick delay = SC_TICK_FROM_SEC(1);
+            ok = wait_device_authorized(server, &selector, &device, attempts,
+                                        delay);
+        }
         if (!ok) {
             goto error_connection_failed;
         }

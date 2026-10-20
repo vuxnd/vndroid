@@ -546,18 +546,25 @@ sc_adb_devices_log(enum sc_log_level level, struct sc_adb_device *devices,
 
 static bool
 sc_adb_device_check_state(struct sc_adb_device *device,
-                          struct sc_adb_device *devices, size_t count) {
+                          struct sc_adb_device *devices, size_t count,
+                          unsigned flags, bool *out_unauthorized) {
     const char *state = device->state;
 
     if (!strcmp("device", state)) {
         return true;
     }
 
-    if (!strcmp("unauthorized", state)) {
-        LOGE("Device is unauthorized:");
-        sc_adb_devices_log(SC_LOG_LEVEL_ERROR, devices, count);
-        LOGE("A popup should open on the device to request authorization.");
-    } else {
+    bool log_errors = !(flags & SC_ADB_NO_LOGERR);
+
+    *out_unauthorized = !strcmp("unauthorized", state);
+    if (*out_unauthorized) {
+        if (log_errors) {
+            LOGE("Device is unauthorized:");
+            sc_adb_devices_log(SC_LOG_LEVEL_ERROR, devices, count);
+            LOGE("A popup should open on the device to request "
+                 "authorization.");
+        }
+    } else if (log_errors) {
         LOGE("Device could not be connected (state=%s)", state);
     }
 
@@ -567,7 +574,10 @@ sc_adb_device_check_state(struct sc_adb_device *device,
 bool
 sc_adb_select_device(struct sc_intr *intr,
                      const struct sc_adb_device_selector *selector,
-                     unsigned flags, struct sc_adb_device *out_device) {
+                     unsigned flags, struct sc_adb_device *out_device,
+                     bool *out_unauthorized) {
+    *out_unauthorized = false;
+
     struct sc_vec_adb_devices vec = SC_VECTOR_INITIALIZER;
     bool ok = sc_adb_list_devices(intr, flags, &vec);
     if (!ok) {
@@ -642,7 +652,8 @@ sc_adb_select_device(struct sc_intr *intr,
     assert(sel_count == 1); // sel_idx is valid only if sel_count == 1
     struct sc_adb_device *device = &vec.data[sel_idx];
 
-    ok = sc_adb_device_check_state(device, vec.data, vec.size);
+    ok = sc_adb_device_check_state(device, vec.data, vec.size, flags,
+                                   out_unauthorized);
     if (!ok) {
         sc_adb_devices_destroy(&vec);
         return false;

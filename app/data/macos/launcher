@@ -14,6 +14,10 @@ STATUS=$?
 if [[ $STATUS != 0 ]]
 then
     TEXT="$(tail -n 15 "$LOG")"
+    if [[ $TEXT == *"Device is unauthorized"* ]]
+    then
+        TEXT="The phone has not allowed USB debugging. Unlock it, tap Allow on the popup, then open VNdroid again."
+    fi
     TEXT="${TEXT//\\/\\\\}"
     TEXT="${TEXT//\"/\\\"}"
     osascript -e "display dialog \"$TEXT\" with title \"VNdroid\" buttons {\"OK\"} default button 1 with icon stop"

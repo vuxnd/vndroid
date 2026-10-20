@@ -98,11 +98,14 @@ sc_adb_disconnect(struct sc_intr *intr, const char *ip_port, unsigned flags);
  * Execute `adb devices` and parse the result to select a device
  *
  * Return true if a single matching device is found, and write it to out_device.
+ * On failure, write to out_unauthorized whether the device is waiting for the
+ * user to accept the USB debugging authorization.
  */
 bool
 sc_adb_select_device(struct sc_intr *intr,
                      const struct sc_adb_device_selector *selector,
-                     unsigned flags, struct sc_adb_device *out_device);
+                     unsigned flags, struct sc_adb_device *out_device,
+                     bool *out_unauthorized);
 
 /**
  * Execute `adb getprop <prop>`
