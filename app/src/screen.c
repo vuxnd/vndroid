@@ -660,9 +660,14 @@ sc_screen_init(struct sc_screen *screen,
     screen->is_icon_active = false;
     SDL_Surface *icon = sc_icon_load(SC_ICON_FILENAME_VNDROID);
     if (icon) {
+        // On macOS, SDL implements this by setting the application's Dock
+        // icon, which would replace the bundle's icon (and show the full-bleed
+        // png larger than other apps), so the icon comes from the bundle icns
+#ifndef __APPLE__
         if (!SDL_SetWindowIcon(screen->window, icon)) {
             LOGW("Could not set window icon: %s", SDL_GetError());
         }
+#endif
 
         if (!params->video) {
             screen->content_size.width = icon->w;

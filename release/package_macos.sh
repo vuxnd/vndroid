@@ -33,10 +33,14 @@ chmod +x "$APP/Contents/MacOS/vndroid-update"
 
 sed "s/@VERSION@/${VERSION#v}/g" app/data/macos/Info.plist > "$APP/Contents/Info.plist"
 
+# The macOS icon has the standard transparent margin (artwork 824 of 1024), so
+# the Dock shows it at the same size as other apps. To regenerate it from
+# app/data/vndroid.svg: sips -s format png -z 824 824, then paste it at 100,100
+# on a transparent 1024x1024 canvas
 for size in 16 32 128 256 512
 do
-    sips -z $size $size app/data/vndroid.png --out "$ICONSET/icon_${size}x${size}.png"
-    sips -z $((size * 2)) $((size * 2)) app/data/vndroid.png \
+    sips -z $size $size app/data/macos/vndroid.png --out "$ICONSET/icon_${size}x${size}.png"
+    sips -z $((size * 2)) $((size * 2)) app/data/macos/vndroid.png \
         --out "$ICONSET/icon_${size}x${size}@2x.png"
 done
 iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/vndroid.icns"
