@@ -1110,7 +1110,7 @@ static const struct sc_shortcut shortcuts[] = {
         .text = "Resize window to remove black borders",
     },
     {
-        .shortcuts = { "MOD+h", "Middle-click" },
+        .shortcuts = { "MOD+1", "Middle-click" },
         .text = "Click on HOME",
     },
     {
@@ -1122,7 +1122,7 @@ static const struct sc_shortcut shortcuts[] = {
         .text = "Click on BACK",
     },
     {
-        .shortcuts = { "MOD+s", "4th-click" },
+        .shortcuts = { "MOD+2", "4th-click" },
         .text = "Click on APP_SWITCH",
     },
     {

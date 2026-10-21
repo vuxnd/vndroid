@@ -560,7 +560,7 @@ sc_input_manager_process_key(struct sc_input_manager *im,
 
         if (control && !im->camera) {
             switch (sdl_keycode) {
-                case SDLK_H:
+                case SDLK_1:
                     if (im->kp && !shift && !repeat && !paused) {
                         action_home(im, action);
                     }
@@ -571,7 +571,7 @@ sc_input_manager_process_key(struct sc_input_manager *im,
                         action_back(im, action);
                     }
                     return;
-                case SDLK_S:
+                case SDLK_2:
                     if (im->kp && !shift && !repeat && !paused) {
                         action_app_switch(im, action);
                     }
