@@ -113,6 +113,7 @@ const struct vndroid_options vndroid_options_default = {
     .new_display = NULL,
     .start_app = NULL,
     .angle = NULL,
+    .saturation = NULL,
     .vd_destroy_content = true,
     .vd_system_decorations = true,
     .camera_torch = false,

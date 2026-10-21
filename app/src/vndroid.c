@@ -453,6 +453,7 @@ vndroid(struct vndroid_options *options) {
         .audio_bit_rate = options->audio_bit_rate,
         .max_fps = options->max_fps,
         .angle = options->angle,
+        .saturation = options->saturation,
         .screen_off_timeout = options->screen_off_timeout,
         .capture_orientation = options->capture_orientation,
         .capture_orientation_lock = options->capture_orientation_lock,

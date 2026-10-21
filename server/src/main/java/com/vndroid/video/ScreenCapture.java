@@ -36,6 +36,7 @@ public class ScreenCapture extends SurfaceCapture {
     private Orientation.Lock captureOrientationLock;
     private Orientation captureOrientation;
     private final float angle;
+    private final float saturation;
 
     private VideoConstraints videoConstraints;
 
@@ -60,6 +61,7 @@ public class ScreenCapture extends SurfaceCapture {
         assert captureOrientationLock != null;
         assert captureOrientation != null;
         this.angle = options.getAngle();
+        this.saturation = options.getSaturation();
     }
 
     @Override
@@ -117,11 +119,11 @@ public class ScreenCapture extends SurfaceCapture {
         }
 
         Size inputSize;
-        if (transform != null) {
+        if (transform != null || saturation != 1) {
             // If there is a filter, it must receive the full display content
             inputSize = displayInfo.getSize();
             assert glRunner == null;
-            OpenGLFilter glFilter = new AffineOpenGLFilter(transform);
+            OpenGLFilter glFilter = new AffineOpenGLFilter(transform, saturation);
             glRunner = new OpenGLRunner(glFilter);
             surface = glRunner.start(inputSize, videoSize, surface);
         } else {

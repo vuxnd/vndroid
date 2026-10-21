@@ -111,6 +111,7 @@ enum {
     OPT_NO_TERMINAL_TITLE,
     OPT_HWDEC,
     OPT_NO_UPDATE_CHECK,
+    OPT_SATURATION,
 };
 
 struct sc_option {
@@ -858,6 +859,15 @@ static const struct sc_option options[] = {
         .text = "By default, VNdroid mirrors only the video when audio capture "
                 "fails on the device. This option makes VNdroid fail if audio "
                 "is enabled but does not work."
+    },
+    {
+        .longopt_id = OPT_SATURATION,
+        .longopt = "saturation",
+        .argdesc = "value",
+        .text = "Adjust the color saturation of the video, on the device: 0 "
+                "is grayscale, 1 leaves colors unchanged, values above 1 "
+                "increase saturation.\n"
+                "Default is 1.5.",
     },
     {
         .shortopt = 's',
@@ -2921,6 +2931,9 @@ parse_args_with_getopt(struct vndroid_cli_args *args, int argc, char *argv[],
                 break;
             case OPT_ANGLE:
                 opts->angle = optarg;
+                break;
+            case OPT_SATURATION:
+                opts->saturation = optarg;
                 break;
             case OPT_NO_VD_DESTROY_CONTENT:
                 opts->vd_destroy_content = false;

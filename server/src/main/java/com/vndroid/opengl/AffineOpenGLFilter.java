@@ -13,6 +13,7 @@ public class AffineOpenGLFilter implements OpenGLFilter {
     private FloatBuffer vertexBuffer;
     private FloatBuffer texCoordsBuffer;
     private final float[] userMatrix;
+    private final float saturation;
 
     private int vertexPosLoc;
     private int texCoordsInLoc;
@@ -20,9 +21,12 @@ public class AffineOpenGLFilter implements OpenGLFilter {
     private int texLoc;
     private int texMatrixLoc;
     private int userMatrixLoc;
+    private int saturationLoc;
 
-    public AffineOpenGLFilter(AffineMatrix transform) {
-        userMatrix = transform.to4x4();
+    public AffineOpenGLFilter(AffineMatrix transform, float saturation) {
+        // transform may be null if the filter only applies the saturation
+        userMatrix = (transform != null ? transform : AffineMatrix.IDENTITY).to4x4();
+        this.saturation = saturation;
     }
 
     @Override
@@ -44,11 +48,14 @@ public class AffineOpenGLFilter implements OpenGLFilter {
                 + "#extension GL_OES_EGL_image_external : require\n"
                 + "precision highp float;\n"
                 + "uniform samplerExternalOES tex;\n"
+                + "uniform float saturation;\n"
                 + "varying vec2 tex_coords;\n"
                 + "void main() {\n"
                 + "    if (tex_coords.x >= 0.0 && tex_coords.x <= 1.0\n"
                 + "            && tex_coords.y >= 0.0 && tex_coords.y <= 1.0) {\n"
-                + "        gl_FragColor = texture2D(tex, tex_coords);\n"
+                + "        vec4 color = texture2D(tex, tex_coords);\n"
+                + "        float luma = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));\n"
+                + "        gl_FragColor = vec4(mix(vec3(luma), color.rgb, saturation), color.a);\n"
                 + "    } else {\n"
                 + "        gl_FragColor = vec4(0.0);\n"
                 + "    }\n"
@@ -91,6 +98,9 @@ public class AffineOpenGLFilter implements OpenGLFilter {
 
         userMatrixLoc = GLES20.glGetUniformLocation(program, "user_matrix");
         assert userMatrixLoc != -1;
+
+        saturationLoc = GLES20.glGetUniformLocation(program, "saturation");
+        assert saturationLoc != -1;
     }
 
     @Override
@@ -119,6 +129,9 @@ public class AffineOpenGLFilter implements OpenGLFilter {
         GLUtils.checkGlError();
 
         GLES20.glUniformMatrix4fv(userMatrixLoc, 1, false, userMatrix, 0);
+        GLUtils.checkGlError();
+
+        GLES20.glUniform1f(saturationLoc, saturation);
         GLUtils.checkGlError();
 
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);

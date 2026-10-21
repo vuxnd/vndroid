@@ -58,6 +58,7 @@ public class NewDisplayCapture extends SurfaceCapture {
     private final boolean captureOrientationLocked;
     private final Orientation captureOrientation;
     private final float angle;
+    private final float saturation;
     private final boolean vdDestroyContent;
     private final boolean vdSystemDecorations;
     private final boolean flexDisplay;
@@ -85,6 +86,7 @@ public class NewDisplayCapture extends SurfaceCapture {
         this.captureOrientation = options.getCaptureOrientation();
         assert captureOrientation != null;
         this.angle = options.getAngle();
+        this.saturation = options.getSaturation();
         this.vdDestroyContent = options.getVDDestroyContent();
         this.vdSystemDecorations = options.getVDSystemDecorations();
         this.flexDisplay = options.getFlexDisplay();
@@ -265,9 +267,9 @@ public class NewDisplayCapture extends SurfaceCapture {
 
     @Override
     public void start(Surface surface) throws IOException {
-        if (displayTransform != null) {
+        if (displayTransform != null || saturation != 1) {
             assert glRunner == null;
-            OpenGLFilter glFilter = new AffineOpenGLFilter(displayTransform);
+            OpenGLFilter glFilter = new AffineOpenGLFilter(displayTransform, saturation);
             glRunner = new OpenGLRunner(glFilter);
             surface = glRunner.start(physicalSize, videoSize, surface);
         }

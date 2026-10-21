@@ -37,6 +37,7 @@ public class Options {
     private int audioBitRate = 128000;
     private float maxFps;
     private float angle;
+    private float saturation = 1.5f;
     private boolean tunnelForward;
     private Rect crop;
     private boolean control = true;
@@ -145,6 +146,10 @@ public class Options {
 
     public float getAngle() {
         return angle;
+    }
+
+    public float getSaturation() {
+        return saturation;
     }
 
     public boolean isTunnelForward() {
@@ -410,6 +415,12 @@ public class Options {
                     break;
                 case "angle":
                     options.angle = parseFloat("angle", value);
+                    break;
+                case "saturation":
+                    options.saturation = parseFloat("saturation", value);
+                    if (!(options.saturation >= 0) || Float.isInfinite(options.saturation)) {
+                        throw new IllegalArgumentException("Invalid saturation (must be a finite value >= 0): " + value);
+                    }
                     break;
                 case "tunnel_forward":
                     options.tunnelForward = Boolean.parseBoolean(value);

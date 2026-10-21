@@ -575,6 +575,12 @@ Default is "letterbox", unless --flex-display is set, in which case it is "unsca
 By default, VNdroid mirrors only the video if audio capture fails on the device. This option makes VNdroid fail if audio is enabled but does not work.
 
 .TP
+.BI "\-\-saturation " value
+Adjust the color saturation of the video, on the device: 0 is grayscale, 1 leaves colors unchanged, values above 1 increase saturation.
+
+Default is 1.5.
+
+.TP
 .BI "\-s, \-\-serial " number
 The device serial number. Mandatory only if several devices are connected to adb.
 

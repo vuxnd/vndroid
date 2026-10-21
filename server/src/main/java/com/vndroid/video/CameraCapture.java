@@ -65,6 +65,7 @@ public class CameraCapture extends SurfaceCapture {
     private final Rect crop;
     private final Orientation captureOrientation;
     private final float angle;
+    private final float saturation;
     private final boolean initialTorch;
     private float zoom;
 
@@ -101,6 +102,7 @@ public class CameraCapture extends SurfaceCapture {
         this.captureOrientation = options.getCaptureOrientation();
         assert captureOrientation != null;
         this.angle = options.getAngle();
+        this.saturation = options.getSaturation();
         this.initialTorch = options.getCameraTorch();
         this.zoom = options.getCameraZoom();
     }
@@ -275,9 +277,9 @@ public class CameraCapture extends SurfaceCapture {
     @TargetApi(AndroidVersions.API_30_ANDROID_11)
     @Override
     public void start(Surface surface) throws IOException {
-        if (transform != null) {
+        if (transform != null || saturation != 1) {
             assert glRunner == null;
-            OpenGLFilter glFilter = new AffineOpenGLFilter(transform);
+            OpenGLFilter glFilter = new AffineOpenGLFilter(transform, saturation);
             // The transform matrix returned by SurfaceTexture is incorrect for camera capture (it often contains an additional unexpected 90°
             // rotation). Use a vertical flip transform matrix instead.
             glRunner = new OpenGLRunner(glFilter, VFLIP_MATRIX);

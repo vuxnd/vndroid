@@ -94,6 +94,7 @@ arguments=(
     '--render-driver=[Request SDL to use the given render driver]:driver name:(direct3d opengl opengles2 opengles metal software)'
     '--render-fit=[Set the render-fit mode]:mode:(letterbox stretched unscaled)'
     '--require-audio=[Make VNdroid fail if audio is enabled but does not work]'
+    '--saturation=[Adjust the color saturation of the video]'
     {-s,--serial=}'[The device serial number \(mandatory for multiple devices only\)]:serial:($("${ADB-adb}" devices | awk '\''$2 == "device" {print $1}'\''))'
     {-S,--turn-screen-off}'[Turn the device screen off immediately]'
     '--screen-off-timeout=[Set the screen off timeout in seconds]'

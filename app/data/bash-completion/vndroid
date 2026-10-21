@@ -89,6 +89,7 @@ _vndroid() {
         --render-driver=
         --render-fit=
         --require-audio
+        --saturation=
         -s --serial=
         -S --turn-screen-off
         --screen-off-timeout=
@@ -230,6 +231,7 @@ _vndroid() {
         |-p|--port \
         |--push-target \
         |--rotation \
+        |--saturation \
         |--screen-off-timeout \
         |--tunnel-host \
         |--tunnel-port \

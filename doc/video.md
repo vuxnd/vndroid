@@ -217,6 +217,21 @@ The center of rotation is the center of the visible area.
 This transformation is applied after `--crop` and `--capture-orientation`.
 
 
+## Saturation
+
+To adjust the color saturation of the video:
+
+```bash
+vndroid --saturation=0    # grayscale
+vndroid --saturation=2    # more saturated colors
+```
+
+The default is `1.5`. Pass `--saturation=1` to leave colors unchanged. The
+saturation is applied on the device, so it also affects recordings. Any value
+other than `1` makes the device process each frame with OpenGL, as `--crop` and
+`--angle` do.
+
+
 ## Crop
 
 The device screen may be cropped to mirror only part of the screen.
