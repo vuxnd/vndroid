@@ -559,21 +559,28 @@ sc_input_manager_process_key(struct sc_input_manager *im,
         }
 
         if (control && !im->camera) {
-            switch (sdl_keycode) {
-                case SDLK_1:
+            // The number row produces layout-dependent keycodes (for example
+            // '+' for the 1 key on Czech QWERTZ), so match the physical keys
+            switch (event->scancode) {
+                case SDL_SCANCODE_1:
                     if (im->kp && !shift && !repeat && !paused) {
                         action_home(im, action);
                     }
                     return;
+                case SDL_SCANCODE_2:
+                    if (im->kp && !shift && !repeat && !paused) {
+                        action_app_switch(im, action);
+                    }
+                    return;
+                default:
+                    break;
+            }
+
+            switch (sdl_keycode) {
                 case SDLK_B: // fall-through
                 case SDLK_BACKSPACE:
                     if (im->kp && !shift && !repeat && !paused) {
                         action_back(im, action);
-                    }
-                    return;
-                case SDLK_2:
-                    if (im->kp && !shift && !repeat && !paused) {
-                        action_app_switch(im, action);
                     }
                     return;
                 case SDLK_M:
