@@ -277,9 +277,9 @@ public class CameraCapture extends SurfaceCapture {
     @TargetApi(AndroidVersions.API_30_ANDROID_11)
     @Override
     public void start(Surface surface) throws IOException {
-        if (transform != null || saturation != 1) {
+        OpenGLFilter glFilter = AffineOpenGLFilter.createIfNeeded(transform, saturation);
+        if (glFilter != null) {
             assert glRunner == null;
-            OpenGLFilter glFilter = new AffineOpenGLFilter(transform, saturation);
             // The transform matrix returned by SurfaceTexture is incorrect for camera capture (it often contains an additional unexpected 90°
             // rotation). Use a vertical flip transform matrix instead.
             glRunner = new OpenGLRunner(glFilter, VFLIP_MATRIX);

@@ -119,11 +119,11 @@ public class ScreenCapture extends SurfaceCapture {
         }
 
         Size inputSize;
-        if (transform != null || saturation != 1) {
+        OpenGLFilter glFilter = AffineOpenGLFilter.createIfNeeded(transform, saturation);
+        if (glFilter != null) {
             // If there is a filter, it must receive the full display content
             inputSize = displayInfo.getSize();
             assert glRunner == null;
-            OpenGLFilter glFilter = new AffineOpenGLFilter(transform, saturation);
             glRunner = new OpenGLRunner(glFilter);
             surface = glRunner.start(inputSize, videoSize, surface);
         } else {

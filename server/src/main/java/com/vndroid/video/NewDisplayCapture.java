@@ -267,9 +267,9 @@ public class NewDisplayCapture extends SurfaceCapture {
 
     @Override
     public void start(Surface surface) throws IOException {
-        if (displayTransform != null || saturation != 1) {
+        OpenGLFilter glFilter = AffineOpenGLFilter.createIfNeeded(displayTransform, saturation);
+        if (glFilter != null) {
             assert glRunner == null;
-            OpenGLFilter glFilter = new AffineOpenGLFilter(displayTransform, saturation);
             glRunner = new OpenGLRunner(glFilter);
             surface = glRunner.start(physicalSize, videoSize, surface);
         }

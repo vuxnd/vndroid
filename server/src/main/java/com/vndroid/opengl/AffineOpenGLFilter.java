@@ -7,7 +7,7 @@ import android.opengl.GLES20;
 
 import java.nio.FloatBuffer;
 
-public class AffineOpenGLFilter implements OpenGLFilter {
+public final class AffineOpenGLFilter implements OpenGLFilter {
 
     private int program;
     private FloatBuffer vertexBuffer;
@@ -23,7 +23,17 @@ public class AffineOpenGLFilter implements OpenGLFilter {
     private int userMatrixLoc;
     private int saturationLoc;
 
-    public AffineOpenGLFilter(AffineMatrix transform, float saturation) {
+    /**
+     * Create a filter if a transform or a saturation change is requested, or return null if the frames may be used as is.
+     */
+    public static AffineOpenGLFilter createIfNeeded(AffineMatrix transform, float saturation) {
+        if (transform == null && saturation == 1) {
+            return null;
+        }
+        return new AffineOpenGLFilter(transform, saturation);
+    }
+
+    private AffineOpenGLFilter(AffineMatrix transform, float saturation) {
         // transform may be null if the filter only applies the saturation
         userMatrix = (transform != null ? transform : AffineMatrix.IDENTITY).to4x4();
         this.saturation = saturation;
