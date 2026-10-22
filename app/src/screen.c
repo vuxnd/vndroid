@@ -514,6 +514,42 @@ sc_screen_frame_sink_push_session(struct sc_frame_sink *sink,
     return SC_SINK_OK;
 }
 
+#ifdef __APPLE__
+// Add the standard transparent margin (artwork 824 of 1024, like the bundle
+// icns)
+static SDL_Surface *
+pad_dock_icon(SDL_Surface *icon) {
+    int side = MAX(icon->w, icon->h);
+    int size = side * 1024 / 824;
+    SDL_Surface *padded =
+        SDL_CreateSurface(size, size, SDL_PIXELFORMAT_RGBA32);
+    if (!padded) {
+        LOGW("Could not create padded icon: %s", SDL_GetError());
+        return NULL;
+    }
+
+    // Copy pixels verbatim instead of blending them over transparent black
+    SDL_BlendMode blend_mode;
+    SDL_GetSurfaceBlendMode(icon, &blend_mode);
+    SDL_SetSurfaceBlendMode(icon, SDL_BLENDMODE_NONE);
+
+    SDL_Rect dst = {
+        .x = (size - icon->w) / 2,
+        .y = (size - icon->h) / 2,
+    };
+    bool ok = SDL_BlitSurface(icon, NULL, padded, &dst);
+    // Restore the blend mode, the icon surface is still used by the caller
+    SDL_SetSurfaceBlendMode(icon, blend_mode);
+    if (!ok) {
+        LOGW("Could not blit icon: %s", SDL_GetError());
+        SDL_DestroySurface(padded);
+        return NULL;
+    }
+
+    return padded;
+}
+#endif
+
 bool
 sc_screen_init(struct sc_screen *screen,
                const struct sc_screen_params *params) {
@@ -661,9 +697,17 @@ sc_screen_init(struct sc_screen *screen,
     SDL_Surface *icon = sc_icon_load(SC_ICON_FILENAME_VNDROID);
     if (icon) {
         // On macOS, SDL implements this by setting the application's Dock
-        // icon, which would replace the bundle's icon (and show the full-bleed
-        // png larger than other apps), so the icon comes from the bundle icns
-#ifndef __APPLE__
+        // icon, so pad it to show it at the same size as other apps (and as
+        // the bundle icns)
+#ifdef __APPLE__
+        SDL_Surface *padded = pad_dock_icon(icon);
+        if (padded) {
+            if (!SDL_SetWindowIcon(screen->window, padded)) {
+                LOGW("Could not set window icon: %s", SDL_GetError());
+            }
+            SDL_DestroySurface(padded);
+        }
+#else
         if (!SDL_SetWindowIcon(screen->window, icon)) {
             LOGW("Could not set window icon: %s", SDL_GetError());
         }
