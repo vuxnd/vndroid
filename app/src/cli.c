@@ -867,7 +867,7 @@ static const struct sc_option options[] = {
         .text = "Adjust the color saturation of the video, on the device: 0 "
                 "is grayscale, 1 leaves colors unchanged, values above 1 "
                 "increase saturation.\n"
-                "Default is 1.5.",
+                "Default is 1.",
     },
     {
         .shortopt = 's',

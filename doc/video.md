@@ -226,10 +226,9 @@ vndroid --saturation=0    # grayscale
 vndroid --saturation=2    # more saturated colors
 ```
 
-The default is `1.5`. Pass `--saturation=1` to leave colors unchanged. The
-saturation is applied on the device, so it also affects recordings. Any value
-other than `1` makes the device process each frame with OpenGL, as `--crop` and
-`--angle` do.
+The default is `1`, which leaves colors unchanged. The saturation is applied on
+the device, so it also affects recordings. Any value other than `1` makes the
+device process each frame with OpenGL, as `--crop` and `--angle` do.
 
 
 ## Crop
