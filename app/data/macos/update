@@ -1,13 +1,21 @@
 #!/bin/bash
-# Usage: vndroid-update <dmg> <bundle> <pid>
+# Usage: vndroid-update <dmg> <bundle> <pid> [<arg>...]
 # Started by VNdroid when the user accepts an update: waits for it to exit,
-# replaces the bundle with the one in the dmg, then reopens it.
+# replaces the bundle with the one in the dmg, then reopens it with its
+# arguments. After a failure it reopens the old bundle, if still in place.
 # The body is a function so bash has read the whole script before the bundle
 # that holds it is moved.
 main() {
     # Launched from the Finder, the helper shares the app's process group
     trap '' HUP TERM
-    local DMG="$1" B="$2" PID="$3" MNT="" TEXT
+    local DMG="$1" B="$2" PID="$3" MNT="" TEXT ARGS
+    shift 3
+    ARGS=("$@")
+
+    # -n: without it, open only activates another running instance
+    relaunch() {
+        open -n "$B" --args "${ARGS[@]}"
+    }
 
     fail() {
         if [[ -n $MNT ]]
@@ -20,6 +28,7 @@ main() {
         TEXT="${TEXT//\\/\\\\}"
         TEXT="${TEXT//\"/\\\"}"
         osascript -e "display dialog \"$TEXT\" with title \"VNdroid\" buttons {\"OK\"} default button 1 with icon stop"
+        [[ -d $B ]] && relaunch
         exit 1
     }
 
@@ -43,7 +52,7 @@ main() {
 
     hdiutil detach -quiet "$MNT" && rmdir "$MNT"
     rm -f "$DMG"
-    open "$B"
+    relaunch
 }
 
 main "$@"
