@@ -138,23 +138,15 @@ curl_start(const char *const argv[], sc_pid *pid, sc_pipe *pout) {
 // exited with code 0.
 static bool
 curl_finish(sc_pid pid, bool abort) {
-    if (abort || !sc_intr_set_process(&update.intr, pid)) {
+    if (abort || sc_intr_is_interrupted(&update.intr)) {
         // Failed or already interrupted
         sc_process_terminate(pid);
         sc_process_close(pid);
         return false;
     }
 
-    // Always pass close=false, interrupting would be racy otherwise
-    sc_exit_code code = sc_process_wait(pid, false);
-    sc_intr_set_process(&update.intr, SC_PROCESS_NONE);
-    sc_process_close(pid);
-
-    if (code) {
-        LOGE("curl returned with value %" SC_PRIexitcode, code);
-        return false;
-    }
-    return true;
+    const char *name = "curl";
+    return sc_process_check_success_intr(&update.intr, pid, name, true);
 }
 
 // Run curl and store its whole output in buf as a string
