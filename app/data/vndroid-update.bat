@@ -30,6 +30,7 @@ if not errorlevel 1 (
 )
 
 rmdir /S /Q "%TMP_DIR%" 2>nul
+rmdir /S /Q "%BACKUP%" 2>nul
 mkdir "%TMP_DIR%" || goto fail
 tar -xf "%ZIP%" -C "%TMP_DIR%" || goto fail
 rem The zip must hold exactly one vndroid-* dir, containing vndroid.exe
