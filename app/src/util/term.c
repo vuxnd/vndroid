@@ -96,6 +96,31 @@ sc_term_stdout_supports_vt(void) {
 #endif
 }
 
+#ifndef _WIN32
+// Write the title without any control character, so that it can neither end
+// the OSC sequence nor start another escape sequence. Stop at the first BEL or
+// ST (the end of the title for the terminal).
+static void
+write_title(FILE *stream, const char *title) {
+    for (const unsigned char *p = (const unsigned char *) title; *p; ++p) {
+        if (*p == '\007' || (*p == '\033' && p[1] == '\\')) {
+            break; // BEL or 7-bit ST
+        }
+        if (*p == 0xC2 && p[1] >= 0x80 && p[1] <= 0x9F) {
+            // C1 control character encoded in UTF-8
+            if (p[1] == 0x9C) {
+                break; // ST
+            }
+            ++p;
+            continue;
+        }
+        if (*p >= 0x20 && *p != 0x7F) {
+            fputc(*p, stream);
+        }
+    }
+}
+#endif
+
 void
 sc_term_set_title(const char *title) {
     if (!sc_term_stdout_isatty()) {
@@ -113,7 +138,9 @@ sc_term_set_title(const char *title) {
     }
 #else
     // Emit an OSC 0 escape sequence recognized by most terminals
-    printf("\033]0;%s\007", title);
+    printf("\033]0;");
+    write_title(stdout, title);
+    printf("\007");
     fflush(stdout);
 #endif
 }
