@@ -21,7 +21,7 @@ BUILD_TOOLS_DIR="$ANDROID_HOME/build-tools/$BUILD_TOOLS"
 
 BUILD_DIR=${BUILD_DIR:-build_manual}
 mkdir -p "$BUILD_DIR"
-BUILD_DIR="$(cd "$BUILD_DIR" && pwd)"
+BUILD_DIR="$(CDPATH= cd -- "$BUILD_DIR" && pwd -P)"
 CLASSES_DIR="$BUILD_DIR/classes"
 GEN_DIR="$BUILD_DIR/gen"
 SERVER_DIR=$(dirname "$0")
