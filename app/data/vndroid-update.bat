@@ -75,12 +75,18 @@ rem One block: xcopy overwrites this file and cmd reads a .bat line by line
     exit /b 0
 )
 
+rem One block too: the restore can put back an older version of this file
 :fail
-if exist "%BACKUP%" xcopy "%BACKUP%" "%DIR%\" /E /Y /Q <nul
-rmdir /S /Q "%BACKUP%" 2>nul
-rmdir /S /Q "%TMP_DIR%" 2>nul
-del "%ZIP%" 2>nul
-echo VNdroid update failed: zip="%ZIP%" dir="%DIR%" reason="%REASON%" > "%TEMP%\vndroid-update.log"
-if defined VNDROID_NOCONSOLE start "" /D "%DIR%" wscript.exe "%DIR%\vndroid-noconsole.vbs"%ARGS%
-if not defined VNDROID_NOCONSOLE start "" /D "%DIR%" "%DIR%\vndroid.exe"%ARGS%
-exit /b 1
+(
+    if exist "%BACKUP%" xcopy "%BACKUP%" "%DIR%\" /E /Y /Q <nul && rmdir /S /Q "%BACKUP%"
+    rmdir /S /Q "%TMP_DIR%" 2>nul
+    del "%ZIP%" 2>nul
+    if exist "%BACKUP%" (
+        echo VNdroid update failed: zip="%ZIP%" dir="%DIR%" reason="%REASON%" restore=failed backup="%BACKUP%" > "%TEMP%\vndroid-update.log"
+    ) else (
+        echo VNdroid update failed: zip="%ZIP%" dir="%DIR%" reason="%REASON%" restore=ok > "%TEMP%\vndroid-update.log"
+    )
+    if defined VNDROID_NOCONSOLE start "" /D "%DIR%" wscript.exe "%DIR%\vndroid-noconsole.vbs"%ARGS%
+    if not defined VNDROID_NOCONSOLE start "" /D "%DIR%" "%DIR%\vndroid.exe"%ARGS%
+    exit /b 1
+)
