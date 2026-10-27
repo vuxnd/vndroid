@@ -127,8 +127,9 @@ public class SurfaceEncoder implements AsyncProcessor {
                     mediaCodec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
                     surface = mediaCodec.createInputSurface();
 
-                    capture.start(surface);
+                    // Set before start(): if start() throws, stop() must still release what it started
                     captureStarted = true;
+                    capture.start(surface);
 
                     mediaCodec.start();
                     mediaCodecStarted = true;

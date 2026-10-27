@@ -36,6 +36,7 @@ public final class OpenGLRunner {
     private int textureId;
 
     private boolean stopped;
+    private boolean initialized;
 
     public OpenGLRunner(OpenGLFilter filter, float[] overrideTransformMatrix) {
         this.filter = filter;
@@ -146,34 +147,41 @@ public final class OpenGLRunner {
             throw new OpenGLException("Failed to make EGL context current");
         }
 
-        int[] textures = new int[1];
-        GLES20.glGenTextures(1, textures, 0);
-        GLUtils.checkGlError();
-        textureId = textures[0];
+        try {
+            int[] textures = new int[1];
+            GLES20.glGenTextures(1, textures, 0);
+            GLUtils.checkGlError();
+            textureId = textures[0];
 
-        GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
-        GLUtils.checkGlError();
-        GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-        GLUtils.checkGlError();
-        GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-        GLUtils.checkGlError();
-        GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
-        GLUtils.checkGlError();
+            GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+            GLUtils.checkGlError();
+            GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+            GLUtils.checkGlError();
+            GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+            GLUtils.checkGlError();
+            GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+            GLUtils.checkGlError();
 
-        surfaceTexture = new SurfaceTexture(textureId);
-        surfaceTexture.setDefaultBufferSize(inputSize.getWidth(), inputSize.getHeight());
-        inputSurface = new Surface(surfaceTexture);
+            surfaceTexture = new SurfaceTexture(textureId);
+            surfaceTexture.setDefaultBufferSize(inputSize.getWidth(), inputSize.getHeight());
+            inputSurface = new Surface(surfaceTexture);
 
-        filter.init();
+            filter.init();
 
-        surfaceTexture.setOnFrameAvailableListener(surfaceTexture -> {
-            if (stopped) {
-                // Make sure to never render after resources have been released
-                return;
-            }
+            surfaceTexture.setOnFrameAvailableListener(surfaceTexture -> {
+                if (stopped) {
+                    // Make sure to never render after resources have been released
+                    return;
+                }
 
-            render(outputSize);
-        }, handler);
+                render(outputSize);
+            }, handler);
+        } catch (OpenGLException | RuntimeException e) {
+            release();
+            throw e;
+        }
+
+        initialized = true;
     }
 
     private void render(Size outputSize) {
@@ -200,23 +208,10 @@ public final class OpenGLRunner {
         final Semaphore sem = new Semaphore(0);
 
         handler.post(() -> {
-            stopped = true;
-            surfaceTexture.setOnFrameAvailableListener(null, handler);
-
-            filter.release();
-
-            int[] textures = {textureId};
-            GLES20.glDeleteTextures(1, textures, 0);
-            GLUtils.checkGlError();
-
-            EGL14.eglDestroySurface(eglDisplay, eglSurface);
-            EGL14.eglDestroyContext(eglDisplay, eglContext);
-            EGL14.eglTerminate(eglDisplay);
-            eglDisplay = EGL14.EGL_NO_DISPLAY;
-            eglContext = EGL14.EGL_NO_CONTEXT;
-            eglSurface = EGL14.EGL_NO_SURFACE;
-            surfaceTexture.release();
-            inputSurface.release();
+            // If run() failed, it has already released everything
+            if (initialized) {
+                release();
+            }
 
             sem.release();
         });
@@ -226,6 +221,32 @@ public final class OpenGLRunner {
         } catch (InterruptedException e) {
             // Behave as if this method call was synchronous
             Thread.currentThread().interrupt();
+        }
+    }
+
+    private void release() {
+        stopped = true;
+        if (surfaceTexture != null) {
+            surfaceTexture.setOnFrameAvailableListener(null, handler);
+        }
+
+        filter.release();
+
+        int[] textures = {textureId};
+        GLES20.glDeleteTextures(1, textures, 0);
+        GLUtils.checkGlError();
+
+        EGL14.eglDestroySurface(eglDisplay, eglSurface);
+        EGL14.eglDestroyContext(eglDisplay, eglContext);
+        EGL14.eglTerminate(eglDisplay);
+        eglDisplay = EGL14.EGL_NO_DISPLAY;
+        eglContext = EGL14.EGL_NO_CONTEXT;
+        eglSurface = EGL14.EGL_NO_SURFACE;
+        if (surfaceTexture != null) {
+            surfaceTexture.release();
+        }
+        if (inputSurface != null) {
+            inputSurface.release();
         }
     }
 }
