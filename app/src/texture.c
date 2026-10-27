@@ -46,6 +46,7 @@ sc_texture_init(struct sc_texture *tex, SDL_Renderer *renderer, bool mipmaps,
     }
 
     tex->renderer = renderer;
+    tex->hwdec_mode = hwdec_mode;
     tex->interop = sc_interop_new(hwdec_mode, tex->renderer, gl, tex->mipmaps);
     if (!tex->interop) {
         return false;
@@ -78,14 +79,11 @@ sc_texture_get_frame_size(struct sc_texture *tex) {
     return tex->interop->frame_size;
 }
 
-bool
-sc_texture_disable_hwdec(struct sc_texture *tex) {
-    assert(tex->interop);
-    assert(tex->interop->hw_type != AV_HWDEVICE_TYPE_NONE);
-
+static bool
+set_interop(struct sc_texture *tex, enum sc_hwdec_mode hwdec_mode) {
     struct sc_opengl *gl = tex->has_gl ? &tex->gl : NULL;
     struct sc_interop *interop =
-        sc_interop_new(SC_HWDEC_MODE_DISABLED, tex->renderer, gl, tex->mipmaps);
+        sc_interop_new(hwdec_mode, tex->renderer, gl, tex->mipmaps);
     if (!interop) {
         return false;
     }
@@ -100,6 +98,14 @@ sc_texture_disable_hwdec(struct sc_texture *tex) {
 }
 
 bool
+sc_texture_disable_hwdec(struct sc_texture *tex) {
+    assert(tex->interop);
+    assert(tex->interop->hw_type != AV_HWDEVICE_TYPE_NONE);
+
+    return set_interop(tex, SC_HWDEC_MODE_DISABLED);
+}
+
+bool
 sc_texture_update(struct sc_texture *tex, const AVFrame *frame) {
     assert(tex->interop);
 
@@ -110,10 +116,21 @@ sc_texture_update(struct sc_texture *tex, const AVFrame *frame) {
         format = AV_PIX_FMT_YUV420P;
     }
 
-    if (tex->interop->hw_type != AV_HWDEVICE_TYPE_NONE
-            && tex->interop->pix_fmt != format) {
-        LOGI("Incompatible frame, switching to software interop");
-        if (!sc_texture_disable_hwdec(tex)) {
+    // The decoder may switch between hardware and software frames when a new
+    // stream session starts
+    bool hw_frame = frame->hw_frames_ctx != NULL;
+    bool hw_interop = tex->interop->hw_type != AV_HWDEVICE_TYPE_NONE;
+    if (hw_frame != hw_interop
+            && (!hw_frame || tex->hwdec_mode != SC_HWDEC_MODE_DISABLED)) {
+        enum sc_hwdec_mode hwdec_mode;
+        if (hw_frame) {
+            LOGI("Hardware frame, switching to hardware interop");
+            hwdec_mode = tex->hwdec_mode;
+        } else {
+            LOGI("Software frame, switching to software interop");
+            hwdec_mode = SC_HWDEC_MODE_DISABLED;
+        }
+        if (!set_interop(tex, hwdec_mode)) {
             return false;
         }
     }

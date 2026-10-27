@@ -21,6 +21,8 @@ struct sc_texture {
     bool has_gl;
     bool mipmaps;
 
+    enum sc_hwdec_mode hwdec_mode;
+
     struct sc_interop *interop;
 };
 
