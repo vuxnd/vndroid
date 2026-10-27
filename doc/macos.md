@@ -14,8 +14,9 @@ xattr -d com.apple.quarantine /Applications/VNdroid.app
 
 Alternatively, see [build.md](build.md) to build and install the app.
 
-`adb` is bundled inside the app. To run `vndroid` from a terminal, you need
-`adb`, accessible from your `PATH`. If you don't have it yet:
+`adb` is bundled inside the app. The `.dmg` does not install `vndroid` in your
+`PATH` or the `vndroid` man page. If you built and installed VNdroid yourself,
+`vndroid` needs `adb`, accessible from your `PATH`. If you don't have it yet:
 
 ```bash
 brew install --cask android-platform-tools
@@ -26,19 +27,21 @@ brew install --cask android-platform-tools
 
 _Make sure that your device meets the [prerequisites](/README.md#prerequisites)._
 
-Once installed, run from a terminal:
+Once installed, open VNdroid from Applications, or run its executable from a
+terminal (if you built and installed VNdroid yourself, run `vndroid` instead):
 
 ```bash
-vndroid
+/Applications/VNdroid.app/Contents/MacOS/vndroid
 ```
 
 or with arguments (here to disable audio and record to `file.mkv`):
 
 ```bash
-vndroid --no-audio --record=file.mkv
+/Applications/VNdroid.app/Contents/MacOS/vndroid --no-audio --record=file.mkv
 ```
 
 Documentation for command line arguments is available:
- - `man vndroid`
- - `vndroid --help`
+ - `/Applications/VNdroid.app/Contents/MacOS/vndroid --help`
+ - the man page source, [vndroid.1](/app/vndroid.1) (`man vndroid` if you built
+   and installed VNdroid yourself)
  - in the [documentation](/README.md#documentation)
