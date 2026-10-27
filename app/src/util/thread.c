@@ -156,12 +156,22 @@ sc_cond_timedwait(sc_cond *cond, sc_mutex *mutex, sc_tick deadline) {
 
     // Round up to the next millisecond to guarantee that the deadline is
     // reached when returning due to timeout
-    uint32_t ms = SC_TICK_TO_MS(deadline - now + SC_TICK_FROM_MS(1) - 1);
+    sc_tick ms = SC_TICK_TO_MS(deadline - now + SC_TICK_FROM_MS(1) - 1);
+    // SDL_WaitConditionTimeout() takes an Sint32: a longer timeout would
+    // overflow, so wait at most INT32_MAX ms at a time
+    bool clamped = ms > INT32_MAX;
+    if (clamped) {
+        ms = INT32_MAX;
+    }
     bool signaled = SDL_WaitConditionTimeout(cond->cond, mutex->mutex, ms);
 #ifndef NDEBUG
     atomic_store_explicit(&mutex->locker, sc_thread_get_id(),
                           memory_order_relaxed);
 #endif
+    if (clamped && !signaled) {
+        // The deadline is not reached yet, wait again
+        return sc_cond_timedwait(cond, mutex, deadline);
+    }
     // The deadline is reached on timeout
     assert(signaled || sc_tick_now() >= deadline);
     return signaled;
