@@ -824,8 +824,8 @@ wait_device_authorized(struct sc_server *server,
         }
 
         bool ok = sc_adb_select_device(&server->intr, selector,
-                                       SC_ADB_NO_LOGERR, out_device,
-                                       &unauthorized);
+                                       SC_ADB_NO_LOGERR | SC_ADB_NO_STDERR,
+                                       out_device, &unauthorized);
         if (ok) {
             return true;
         }
@@ -1054,18 +1054,20 @@ run_server(void *data) {
         }
         struct sc_adb_device device;
         bool unauthorized;
-        ok = sc_adb_select_device(&server->intr, &selector, SC_ADB_NO_LOGERR,
-                                  &device, &unauthorized);
+        ok = sc_adb_select_device(&server->intr, &selector,
+                                  SC_ADB_NO_LOGERR | SC_ADB_NO_STDERR, &device,
+                                  &unauthorized);
+        if (!ok && !unauthorized) {
+            // The first attempt was silent, retry with errors logged, so that
+            // the failure is reported
+            ok = sc_adb_select_device(&server->intr, &selector, 0, &device,
+                                      &unauthorized);
+        }
         if (!ok && unauthorized) {
             unsigned attempts = 60;
             sc_tick delay = SC_TICK_FROM_SEC(1);
             ok = wait_device_authorized(server, &selector, &device, attempts,
                                         delay);
-        } else if (!ok) {
-            // The first attempt was silent, retry with errors logged, so that
-            // the failure is reported
-            ok = sc_adb_select_device(&server->intr, &selector, 0, &device,
-                                      &unauthorized);
         }
         if (!ok) {
             goto error_connection_failed;

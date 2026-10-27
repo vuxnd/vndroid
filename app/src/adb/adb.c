@@ -565,7 +565,7 @@ sc_adb_device_check_state(struct sc_adb_device *device,
                      || !strcmp("authorizing", state)
                      || !strcmp("connecting", state)
                      || (!strcmp("offline", state) && is_usb);
-    if (*out_unauthorized) {
+    if (!strcmp("unauthorized", state) || !strcmp("authorizing", state)) {
         if (log_errors) {
             LOGE("Device is unauthorized:");
             sc_adb_devices_log(SC_LOG_LEVEL_ERROR, devices, count);
