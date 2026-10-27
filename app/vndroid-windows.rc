@@ -13,7 +13,7 @@ BEGIN
       VALUE "LegalCopyright", "Romain Vimont, Genymobile"
       VALUE "OriginalFilename", "vndroid.exe"
       VALUE "ProductName", "VNdroid"
-      VALUE "ProductVersion", "0.1.4"
+      VALUE "ProductVersion", "0.1.5"
     END
   END
   BLOCK "VarFileInfo"
