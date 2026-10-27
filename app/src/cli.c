@@ -1463,7 +1463,8 @@ print_shortcuts_intro(unsigned cols) {
     char *intro = sc_str_wrap_lines(
         "In the following list, MOD is the shortcut modifier. By default, it's "
         "(left) Alt or (left) Super, but it can be configured by "
-        "--shortcut-mod (see above).", cols, 4);
+        "--shortcut-mod (see above). On Windows, Super+1 and Super+2 are taken by "
+        "the taskbar, so use Alt for MOD+1 and MOD+2.", cols, 4);
     if (!intro) {
         printf("<ERROR>\n");
         return;

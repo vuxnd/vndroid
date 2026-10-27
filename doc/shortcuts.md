@@ -19,6 +19,8 @@ vndroid --shortcut-mod=lctrl,lsuper
 
 _<kbd>[Super]</kbd> is typically the <kbd>Windows</kbd> or <kbd>Cmd</kbd> key._
 
+_On Windows, <kbd>Super</kbd>+<kbd>1</kbd> and <kbd>Super</kbd>+<kbd>2</kbd> are taken by the taskbar, so use <kbd>Alt</kbd> for those two shortcuts._
+
 [Super]: https://en.wikipedia.org/wiki/Super_key_(keyboard_button)
 
  | Action                                      |   Shortcut
