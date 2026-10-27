@@ -142,6 +142,92 @@ static void test_no_update_check(void) {
     assert(!args.opts.update_check);
 }
 
+static bool parse_saturation(struct vndroid_cli_args *args, char *value) {
+    *args = (struct vndroid_cli_args) {
+        .opts = vndroid_options_default,
+        .help = false,
+        .version = false,
+    };
+
+    char *argv[] = {
+        "vndroid",
+        "--saturation", value,
+    };
+
+    return vndroid_parse_args(args, ARRAY_LEN(argv), argv);
+}
+
+static void test_saturation(void) {
+    struct vndroid_cli_args args;
+
+    // not set by default
+    assert(!vndroid_options_default.saturation);
+
+    assert(parse_saturation(&args, "0"));
+    assert(!strcmp(args.opts.saturation, "0"));
+
+    assert(parse_saturation(&args, "1.5"));
+    assert(!strcmp(args.opts.saturation, "1.5"));
+
+    assert(parse_saturation(&args, "2e1"));
+    assert(!strcmp(args.opts.saturation, "2e1"));
+}
+
+static void test_saturation_invalid(void) {
+    struct vndroid_cli_args args;
+
+    // negative
+    assert(!parse_saturation(&args, "-0.5"));
+    assert(!parse_saturation(&args, "-1"));
+
+    // not finite
+    assert(!parse_saturation(&args, "inf"));
+    assert(!parse_saturation(&args, "nan"));
+    assert(!parse_saturation(&args, "1e400"));
+
+    // not a number
+    assert(!parse_saturation(&args, ""));
+    assert(!parse_saturation(&args, "abc"));
+    assert(!parse_saturation(&args, "1x"));
+    assert(!parse_saturation(&args, "1,5"));
+}
+
+#ifdef HAVE_USB
+static void test_saturation_otg(void) {
+    struct vndroid_cli_args args = {
+        .opts = vndroid_options_default,
+        .help = false,
+        .version = false,
+    };
+
+    char *argv[] = {
+        "vndroid",
+        "--otg",
+    };
+
+    bool ok = vndroid_parse_args(&args, ARRAY_LEN(argv), argv);
+    assert(ok);
+    assert(args.opts.otg);
+    assert(!args.opts.saturation);
+
+    // The saturation applies to the mirrored video, which OTG mode disables
+    args = (struct vndroid_cli_args) {
+        .opts = vndroid_options_default,
+        .help = false,
+        .version = false,
+    };
+
+    char *argv2[] = {
+        "vndroid",
+        "--otg",
+        "--saturation", "1",
+    };
+
+    ok = vndroid_parse_args(&args, ARRAY_LEN(argv2), argv2);
+    assert(!ok);
+}
+#endif
+
 static void test_parse_shortcut_mods(void) {
     uint8_t mods;
     bool ok;
@@ -179,6 +265,11 @@ int main(int argc, char *argv[]) {
     test_options();
     test_options2();
     test_no_update_check();
+    test_saturation();
+    test_saturation_invalid();
+#ifdef HAVE_USB
+    test_saturation_otg();
+#endif
     test_parse_shortcut_mods();
     return 0;
 }
