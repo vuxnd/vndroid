@@ -19,7 +19,9 @@ BUILD_TOOLS=${ANDROID_BUILD_TOOLS:-36.0.0}
 PLATFORM_TOOLS="$ANDROID_HOME/platforms/android-$PLATFORM"
 BUILD_TOOLS_DIR="$ANDROID_HOME/build-tools/$BUILD_TOOLS"
 
-BUILD_DIR="$(realpath ${BUILD_DIR:-build_manual})"
+BUILD_DIR=${BUILD_DIR:-build_manual}
+mkdir -p "$BUILD_DIR"
+BUILD_DIR="$(cd "$BUILD_DIR" && pwd)"
 CLASSES_DIR="$BUILD_DIR/classes"
 GEN_DIR="$BUILD_DIR/gen"
 SERVER_DIR=$(dirname "$0")
