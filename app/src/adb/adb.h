@@ -98,8 +98,13 @@ sc_adb_disconnect(struct sc_intr *intr, const char *ip_port, unsigned flags);
  * Execute `adb devices` and parse the result to select a device
  *
  * Return true if a single matching device is found, and write it to out_device.
- * On failure, write to out_unauthorized whether the device is waiting for the
- * user to accept the USB debugging authorization.
+ * On failure, write to out_unauthorized whether the selected device may become
+ * available later: its state is "unauthorized", "authorizing" or "connecting",
+ * or "offline" over USB (waiting for the user to accept the USB debugging
+ * authorization). An offline TCP/IP device is not expected to recover.
+ *
+ * If flags contains SC_ADB_NO_LOGERR, the failure is not logged (except if adb
+ * could not be executed).
  */
 bool
 sc_adb_select_device(struct sc_intr *intr,

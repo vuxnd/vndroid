@@ -833,6 +833,12 @@ wait_device_authorized(struct sc_server *server,
 
     // Still unauthorized, or another error occurred: retry once with errors
     // logged, so that the failure is reported
+    sc_tick deadline = sc_tick_now() + delay;
+    if (!sc_server_sleep(server, deadline)) {
+        LOGI("Device authorization waiting interrupted");
+        return false;
+    }
+
     return sc_adb_select_device(&server->intr, selector, 0, out_device,
                                 &unauthorized);
 }
@@ -1048,13 +1054,18 @@ run_server(void *data) {
         }
         struct sc_adb_device device;
         bool unauthorized;
-        ok = sc_adb_select_device(&server->intr, &selector, 0, &device,
-                                  &unauthorized);
+        ok = sc_adb_select_device(&server->intr, &selector, SC_ADB_NO_LOGERR,
+                                  &device, &unauthorized);
         if (!ok && unauthorized) {
             unsigned attempts = 60;
             sc_tick delay = SC_TICK_FROM_SEC(1);
             ok = wait_device_authorized(server, &selector, &device, attempts,
                                         delay);
+        } else if (!ok) {
+            // The first attempt was silent, retry with errors logged, so that
+            // the failure is reported
+            ok = sc_adb_select_device(&server->intr, &selector, 0, &device,
+                                      &unauthorized);
         }
         if (!ok) {
             goto error_connection_failed;

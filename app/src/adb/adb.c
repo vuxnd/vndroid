@@ -556,7 +556,15 @@ sc_adb_device_check_state(struct sc_adb_device *device,
 
     bool log_errors = !(flags & SC_ADB_NO_LOGERR);
 
-    *out_unauthorized = !strcmp("unauthorized", state);
+    // These states end by themselves or once the user accepts the
+    // authorization. A TCP/IP device may stay offline indefinitely, so only an
+    // offline USB device is worth waiting for.
+    bool is_usb =
+        sc_adb_device_get_type(device->serial) == SC_ADB_DEVICE_TYPE_USB;
+    *out_unauthorized = !strcmp("unauthorized", state)
+                     || !strcmp("authorizing", state)
+                     || !strcmp("connecting", state)
+                     || (!strcmp("offline", state) && is_usb);
     if (*out_unauthorized) {
         if (log_errors) {
             LOGE("Device is unauthorized:");
@@ -576,17 +584,23 @@ sc_adb_select_device(struct sc_intr *intr,
                      const struct sc_adb_device_selector *selector,
                      unsigned flags, struct sc_adb_device *out_device,
                      bool *out_unauthorized) {
+    bool log_errors = !(flags & SC_ADB_NO_LOGERR);
+
     *out_unauthorized = false;
 
     struct sc_vec_adb_devices vec = SC_VECTOR_INITIALIZER;
     bool ok = sc_adb_list_devices(intr, flags, &vec);
     if (!ok) {
-        LOGE("Could not list ADB devices");
+        if (log_errors) {
+            LOGE("Could not list ADB devices");
+        }
         return false;
     }
 
     if (vec.size == 0) {
-        LOGE("Could not find any ADB device");
+        if (log_errors) {
+            LOGE("Could not find any ADB device");
+        }
         return false;
     }
 
@@ -599,52 +613,57 @@ sc_adb_select_device(struct sc_intr *intr,
         // requested
         assert(selector->type != SC_ADB_DEVICE_SELECT_ALL);
 
-        switch (selector->type) {
-            case SC_ADB_DEVICE_SELECT_SERIAL:
-                assert(selector->serial);
-                LOGE("Could not find ADB device %s:", selector->serial);
-                break;
-            case SC_ADB_DEVICE_SELECT_USB:
-                LOGE("Could not find any ADB device over USB:");
-                break;
-            case SC_ADB_DEVICE_SELECT_TCPIP:
-                LOGE("Could not find any ADB device over TCP/IP:");
-                break;
-            default:
-                assert(!"Unexpected selector type");
-                break;
-        }
+        if (log_errors) {
+            switch (selector->type) {
+                case SC_ADB_DEVICE_SELECT_SERIAL:
+                    assert(selector->serial);
+                    LOGE("Could not find ADB device %s:", selector->serial);
+                    break;
+                case SC_ADB_DEVICE_SELECT_USB:
+                    LOGE("Could not find any ADB device over USB:");
+                    break;
+                case SC_ADB_DEVICE_SELECT_TCPIP:
+                    LOGE("Could not find any ADB device over TCP/IP:");
+                    break;
+                default:
+                    assert(!"Unexpected selector type");
+                    break;
+            }
 
-        sc_adb_devices_log(SC_LOG_LEVEL_ERROR, vec.data, vec.size);
+            sc_adb_devices_log(SC_LOG_LEVEL_ERROR, vec.data, vec.size);
+        }
         sc_adb_devices_destroy(&vec);
         return false;
     }
 
     if (sel_count > 1) {
-        switch (selector->type) {
-            case SC_ADB_DEVICE_SELECT_ALL:
-                LOGE("Multiple (%" SC_PRIsizet ") ADB devices:", sel_count);
-                break;
-            case SC_ADB_DEVICE_SELECT_SERIAL:
-                assert(selector->serial);
-                LOGE("Multiple (%" SC_PRIsizet ") ADB devices with serial %s:",
-                     sel_count, selector->serial);
-                break;
-            case SC_ADB_DEVICE_SELECT_USB:
-                LOGE("Multiple (%" SC_PRIsizet ") ADB devices over USB:",
-                     sel_count);
-                break;
-            case SC_ADB_DEVICE_SELECT_TCPIP:
-                LOGE("Multiple (%" SC_PRIsizet ") ADB devices over TCP/IP:",
-                     sel_count);
-                break;
-            default:
-                assert(!"Unexpected selector type");
-                break;
+        if (log_errors) {
+            switch (selector->type) {
+                case SC_ADB_DEVICE_SELECT_ALL:
+                    LOGE("Multiple (%" SC_PRIsizet ") ADB devices:",
+                         sel_count);
+                    break;
+                case SC_ADB_DEVICE_SELECT_SERIAL:
+                    assert(selector->serial);
+                    LOGE("Multiple (%" SC_PRIsizet ") ADB devices with "
+                         "serial %s:", sel_count, selector->serial);
+                    break;
+                case SC_ADB_DEVICE_SELECT_USB:
+                    LOGE("Multiple (%" SC_PRIsizet ") ADB devices over USB:",
+                         sel_count);
+                    break;
+                case SC_ADB_DEVICE_SELECT_TCPIP:
+                    LOGE("Multiple (%" SC_PRIsizet ") ADB devices over "
+                         "TCP/IP:", sel_count);
+                    break;
+                default:
+                    assert(!"Unexpected selector type");
+                    break;
+            }
+            sc_adb_devices_log(SC_LOG_LEVEL_ERROR, vec.data, vec.size);
+            LOGE("Select a device via -s (--serial), -d (--select-usb) or -e "
+                 "(--select-tcpip)");
         }
-        sc_adb_devices_log(SC_LOG_LEVEL_ERROR, vec.data, vec.size);
-        LOGE("Select a device via -s (--serial), -d (--select-usb) or -e "
-             "(--select-tcpip)");
         sc_adb_devices_destroy(&vec);
         return false;
     }
