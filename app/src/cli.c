@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <getopt.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -2313,6 +2314,25 @@ parse_screen_off_timeout(const char *s, sc_tick *tick) {
     return true;
 }
 
+// The server parses the value as a float (see Options.java), only check it
+static bool
+parse_saturation(const char *s) {
+    char *end;
+    float value = strtof(s, &end);
+    if (end == s || *end) {
+        LOGE("Could not parse saturation: %s", s);
+        return false;
+    }
+
+    if (!isfinite(value) || value < 0) {
+        LOGE("Could not parse saturation: value (%s) out-of-range "
+             "(finite value >= 0 expected)", s);
+        return false;
+    }
+
+    return true;
+}
+
 static bool
 parse_pause_on_exit(const char *s, enum sc_pause_on_exit *pause_on_exit) {
     if (!s || !strcmp(s, "true")) {
@@ -2904,6 +2924,9 @@ parse_args_with_getopt(struct vndroid_cli_args *args, int argc, char *argv[],
                 opts->angle = optarg;
                 break;
             case OPT_SATURATION:
+                if (!parse_saturation(optarg)) {
+                    return false;
+                }
                 opts->saturation = optarg;
                 break;
             case OPT_NO_VD_DESTROY_CONTENT:
@@ -3477,6 +3500,10 @@ parse_args_with_getopt(struct vndroid_cli_args *args, int argc, char *argv[],
         }
         if (opts->display_id) {
             LOGE("OTG mode: could not select display");
+            return false;
+        }
+        if (opts->saturation) {
+            LOGE("OTG mode: could not adjust saturation");
             return false;
         }
     }
