@@ -46,6 +46,8 @@ sc_input_manager_init(struct sc_input_manager *im,
     im->last_keycode = SDLK_UNKNOWN;
     im->last_mod = 0;
     im->key_repeat = 0;
+    im->home_down_sent = false;
+    im->app_switch_down_sent = false;
 
     im->next_sequence = 1; // 0 is reserved for SC_SEQUENCE_INVALID
 
@@ -411,12 +413,6 @@ inverse_point(struct sc_point point, struct sc_size size,
     return point;
 }
 
-// Whether the DOWN event of the HOME or APP_SWITCH shortcut has been sent. The
-// matching UP event must be sent even if MOD is released first (it is then not
-// recognized as a shortcut anymore).
-static bool home_down_sent;
-static bool app_switch_down_sent;
-
 static void
 sc_input_manager_process_key(struct sc_input_manager *im,
                              const SDL_KeyboardEvent *event) {
@@ -471,16 +467,16 @@ sc_input_manager_process_key(struct sc_input_manager *im,
         switch (event->scancode) {
             case SDL_SCANCODE_1: // fall-through
             case SDL_SCANCODE_KP_1:
-                if (home_down_sent) {
-                    home_down_sent = false;
+                if (im->home_down_sent) {
+                    im->home_down_sent = false;
                     action_home(im, SC_ACTION_UP);
                     return;
                 }
                 break;
             case SDL_SCANCODE_2: // fall-through
             case SDL_SCANCODE_KP_2:
-                if (app_switch_down_sent) {
-                    app_switch_down_sent = false;
+                if (im->app_switch_down_sent) {
+                    im->app_switch_down_sent = false;
                     action_app_switch(im, SC_ACTION_UP);
                     return;
                 }
@@ -596,14 +592,14 @@ sc_input_manager_process_key(struct sc_input_manager *im,
                     // The UP event is sent above, if the DOWN event was sent
                     if (down && im->kp && !shift && !repeat && !paused) {
                         action_home(im, action);
-                        home_down_sent = true;
+                        im->home_down_sent = true;
                     }
                     return;
                 case SDL_SCANCODE_2: // fall-through
                 case SDL_SCANCODE_KP_2:
                     if (down && im->kp && !shift && !repeat && !paused) {
                         action_app_switch(im, action);
-                        app_switch_down_sent = true;
+                        im->app_switch_down_sent = true;
                     }
                     return;
                 default:
