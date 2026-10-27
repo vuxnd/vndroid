@@ -195,15 +195,10 @@ sc_video_regulator_frame_sink_push(struct sc_frame_sink *sink,
         return sc_frame_source_sinks_push(&vr->frame_source, frame);
     }
 
-    struct sc_delayed_packet *dpacket =
-        sc_vecdeque_push_uninitialized(&vr->queue);
-    if (!dpacket) {
-        sc_mutex_unlock(&vr->mutex);
-        LOG_OOM();
-        return SC_SINK_KO;
-    }
-
-    bool ok = sc_delayed_packet_init_frame(dpacket, frame);
+    // Initialize the packet before pushing it, so that a failure never leaves
+    // a frame-less packet in the queue
+    struct sc_delayed_packet dpacket;
+    bool ok = sc_delayed_packet_init_frame(&dpacket, frame);
     if (!ok) {
         sc_mutex_unlock(&vr->mutex);
         LOG_OOM();
@@ -211,8 +206,16 @@ sc_video_regulator_frame_sink_push(struct sc_frame_sink *sink,
     }
 
 #ifdef SC_BUFFERING_DEBUG
-    dpacket->push_date = sc_tick_now();
+    dpacket.push_date = sc_tick_now();
 #endif
+
+    ok = sc_vecdeque_push(&vr->queue, dpacket);
+    if (!ok) {
+        sc_delayed_packet_destroy(&dpacket);
+        sc_mutex_unlock(&vr->mutex);
+        LOG_OOM();
+        return SC_SINK_KO;
+    }
 
     sc_cond_signal(&vr->queue_cond);
 
