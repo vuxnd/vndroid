@@ -147,4 +147,21 @@ sc_str_remove_trailing_cr(char *s, size_t len);
 char *
 sc_str_to_hex_string(const uint8_t *data, size_t len);
 
+/**
+ * Parse a hexadecimal digit (case-insensitive)
+ *
+ * Return false if `c` is not a hexadecimal digit.
+ */
+bool
+sc_str_parse_hex_digit(char c, uint8_t *value);
+
+/**
+ * Parse the first two characters of `s` as a hexadecimal byte
+ *
+ * Return false if one of them is not a hexadecimal digit (a string shorter
+ * than 2 characters is rejected).
+ */
+bool
+sc_str_parse_hex_byte(const char *s, uint8_t *value);
+
 #endif

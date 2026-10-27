@@ -358,3 +358,32 @@ sc_str_to_hex_string(const uint8_t *data, size_t size) {
 
     return buffer;
 }
+
+bool
+sc_str_parse_hex_digit(char c, uint8_t *value) {
+    if (c >= '0' && c <= '9') {
+        *value = c - '0';
+        return true;
+    }
+    if (c >= 'a' && c <= 'f') {
+        *value = c - 'a' + 10;
+        return true;
+    }
+    if (c >= 'A' && c <= 'F') {
+        *value = c - 'A' + 10;
+        return true;
+    }
+    return false;
+}
+
+bool
+sc_str_parse_hex_byte(const char *s, uint8_t *value) {
+    uint8_t left, right;
+    bool ok = sc_str_parse_hex_digit(s[0], &left)
+           && sc_str_parse_hex_digit(s[1], &right);
+    if (!ok) {
+        return false;
+    }
+    *value = left << 4 | right;
+    return true;
+}

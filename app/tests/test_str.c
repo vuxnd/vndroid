@@ -376,6 +376,35 @@ static void test_remove_trailing_cr(void) {
     assert(!strcmp(s3, "adb\rdef"));
 }
 
+static void test_parse_hex_byte(void) {
+    uint8_t value;
+
+    assert(sc_str_parse_hex_byte("00", &value));
+    assert(value == 0x00);
+
+    assert(sc_str_parse_hex_byte("7f", &value));
+    assert(value == 0x7F);
+
+    // case-insensitive, only the first two characters are read
+    assert(sc_str_parse_hex_byte("Ab", &value));
+    assert(value == 0xAB);
+    assert(sc_str_parse_hex_byte("FFxyz", &value));
+    assert(value == 0xFF);
+
+    // invalid characters
+    value = 0x42;
+    assert(!sc_str_parse_hex_byte("g1", &value));
+    assert(!sc_str_parse_hex_byte("1g", &value));
+    assert(!sc_str_parse_hex_byte(" 1", &value));
+    assert(!sc_str_parse_hex_byte("-1", &value));
+    assert(value == 0x42); // unchanged on failure
+
+    // too short
+    assert(!sc_str_parse_hex_byte("", &value));
+    assert(!sc_str_parse_hex_byte("a", &value));
+    assert(value == 0x42);
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
     (void) argv;
@@ -397,5 +426,6 @@ int main(int argc, char *argv[]) {
     test_wrap_lines();
     test_index_of_column();
     test_remove_trailing_cr();
+    test_parse_hex_byte();
     return 0;
 }

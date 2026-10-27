@@ -2411,35 +2411,6 @@ parse_mouse_bindings(const char *s, struct sc_mouse_bindings *mb) {
 }
 
 static bool
-parse_hex_char(char c, uint8_t *value) {
-    if (c >= '0' && c <= '9') {
-        *value = c - '0';
-        return true;
-    }
-    if (c >= 'a' && c <= 'f') {
-        *value = c - 'a' + 10;
-        return true;
-    }
-    if (c >= 'A' && c <= 'F') {
-        *value = c - 'A' + 10;
-        return true;
-    }
-    return false;
-}
-
-static bool
-parse_hex_byte(const char *s, uint8_t *value) {
-    uint8_t left, right;
-    bool ok = parse_hex_char(s[0], &left)
-           && parse_hex_char(s[1], &right);
-    if (!ok) {
-        return false;
-    }
-    *value = left << 4 | right;
-    return true;
-}
-
-static bool
 parse_hex_color(const char *s, uint32_t *color) {
     if (s[0] == '#') {
         // Accept with and without a leading '#'
@@ -2456,7 +2427,7 @@ parse_hex_color(const char *s, uint32_t *color) {
     uint8_t rgb[3];
     if (len == 3) {
         for (size_t i = 0; i < 3; ++i) {
-            bool ok = parse_hex_char(s[i], &rgb[i]);
+            bool ok = sc_str_parse_hex_digit(s[i], &rgb[i]);
             if (!ok) {
                 LOGE("Invalid hexadecimal color code: %s", s);
                 return false;
@@ -2466,7 +2437,7 @@ parse_hex_color(const char *s, uint32_t *color) {
     } else {
         assert(len == 6);
         for (size_t i = 0; i < 3; ++i) {
-            bool ok = parse_hex_byte(&s[2*i], &rgb[i]);
+            bool ok = sc_str_parse_hex_byte(&s[2*i], &rgb[i]);
             if (!ok) {
                 LOGE("Invalid hexadecimal color code: %s", s);
                 return false;
