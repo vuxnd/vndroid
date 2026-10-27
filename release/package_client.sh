@@ -7,16 +7,16 @@ cd .. # root project dir
 if [[ $# != 2 ]]
 then
     # <target_name>: for example win64
-    # <format>: zip or tar.gz
+    # <format>: zip
     echo "Syntax: $0 <target> <format>" >&2
     exit 1
 fi
 
 FORMAT=$2
 
-if [[ "$FORMAT" != zip && "$FORMAT" != tar.gz ]]
+if [[ "$FORMAT" != zip ]]
 then
-    echo "Invalid format (expected zip or tar.gz): $FORMAT" >&2
+    echo "Invalid format (expected zip): $FORMAT" >&2
     exit 1
 fi
 
@@ -39,11 +39,8 @@ case "$FORMAT" in
     zip)
         zip -r "$OUTPUT_DIR/$TARGET_DIRNAME.zip" "$TARGET_DIRNAME"
         ;;
-    tar.gz)
-        tar cvzf "$OUTPUT_DIR/$TARGET_DIRNAME.tar.gz" "$TARGET_DIRNAME"
-        ;;
     *)
-        echo "Invalid format (expected zip or tar.gz): $FORMAT" >&2
+        echo "Invalid format (expected zip): $FORMAT" >&2
         exit 1
 esac
 
