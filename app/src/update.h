@@ -77,11 +77,6 @@ sc_update_find_checksum(const char *sums, const char *name,
 char *
 sc_update_bundle_path(const char *exe_path);
 
-// Part before the last '/' or '\\': "C:\\VNdroid\\vndroid.exe" -> "C:\\VNdroid".
-// NULL if there is no separator. Free with free().
-char *
-sc_update_parent_dir(const char *path);
-
 /* Update flow (update.c), main thread only */
 
 // argv as received by main(): argv[1..argc-1] are passed to the update helper,

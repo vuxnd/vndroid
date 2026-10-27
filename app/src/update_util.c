@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "util/log.h"
+#include "util/str.h"
 
 #define VERSION_MAX_COMPONENTS 4
 #define VERSION_MAX_DIGITS 9
@@ -113,20 +114,6 @@ sc_update_asset_name(const char *target, const char *tag) {
     return name;
 }
 
-static int
-hex_value(char c) {
-    if (c >= '0' && c <= '9') {
-        return c - '0';
-    }
-    if (c >= 'a' && c <= 'f') {
-        return c - 'a' + 10;
-    }
-    if (c >= 'A' && c <= 'F') {
-        return c - 'A' + 10;
-    }
-    return -1;
-}
-
 bool
 sc_update_find_checksum(const char *sums, const char *name,
                         uint8_t digest[SC_SHA256_DIGEST_SIZE]) {
@@ -148,12 +135,9 @@ sc_update_find_checksum(const char *sums, const char *name,
                 return false;
             }
             for (size_t i = 0; i < SC_SHA256_DIGEST_SIZE; ++i) {
-                int hi = hex_value(sums[2 * i]);
-                int lo = hex_value(sums[2 * i + 1]);
-                if (hi < 0 || lo < 0) {
+                if (!sc_str_parse_hex_byte(&sums[2 * i], &digest[i])) {
                     return false;
                 }
-                digest[i] = hi << 4 | lo;
             }
             return true;
         }
@@ -196,27 +180,4 @@ sc_update_bundle_path(const char *exe_path) {
     memcpy(bundle, exe_path, bundle_len);
     bundle[bundle_len] = '\0';
     return bundle;
-}
-
-char *
-sc_update_parent_dir(const char *path) {
-    const char *sep = NULL;
-    for (const char *p = path; *p; ++p) {
-        if (*p == '/' || *p == '\\') {
-            sep = p;
-        }
-    }
-    if (!sep) {
-        return NULL;
-    }
-
-    size_t len = sep - path;
-    char *dir = malloc(len + 1);
-    if (!dir) {
-        LOG_OOM();
-        return NULL;
-    }
-    memcpy(dir, path, len);
-    dir[len] = '\0';
-    return dir;
 }

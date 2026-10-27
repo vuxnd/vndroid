@@ -184,20 +184,6 @@ static void test_bundle_path_invalid(void) {
         "/Contents/MacOS/vndroid"));
 }
 
-static void test_parent_dir(void) {
-    char *dir = sc_update_parent_dir("C:\\VNdroid\\vndroid.exe");
-    assert(dir);
-    assert(!strcmp(dir, "C:\\VNdroid"));
-    free(dir);
-
-    dir = sc_update_parent_dir("/a/b");
-    assert(dir);
-    assert(!strcmp(dir, "/a"));
-    free(dir);
-
-    assert(!sc_update_parent_dir("vndroid.exe"));
-}
-
 int main(int argc, char *argv[]) {
     (void) argc;
     (void) argv;
@@ -215,6 +201,5 @@ int main(int argc, char *argv[]) {
     test_find_checksum_invalid();
     test_bundle_path();
     test_bundle_path_invalid();
-    test_parent_dir();
     return 0;
 }

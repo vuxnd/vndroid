@@ -288,6 +288,8 @@ if get_option('buildtype') == 'debug'
             'tests/test_update_util.c',
             'src/update_util.c',
             'src/util/log.c',
+            'src/util/str.c',
+            'src/util/strbuf.c',
         ]],
         ['test_vecdeque', [
             'tests/test_vecdeque.c',
