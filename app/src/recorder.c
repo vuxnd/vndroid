@@ -453,10 +453,15 @@ end:
 
 static bool
 sc_recorder_record(struct sc_recorder *recorder) {
+    // The sinks must never see a freed ctx with stopped == false
+    sc_mutex_lock(&recorder->mutex);
     bool ok = sc_recorder_open_output_file(recorder);
     if (!ok) {
+        recorder->stopped = true;
+        sc_mutex_unlock(&recorder->mutex);
         return false;
     }
+    sc_mutex_unlock(&recorder->mutex);
 
     ok = sc_recorder_process_packets(recorder);
     sc_recorder_close_output_file(recorder);
