@@ -205,6 +205,11 @@ public final class OpenGLRunner {
     }
 
     public void stopAndRelease() {
+        if (handler == null) {
+            // initOnce() failed before anything was started
+            return;
+        }
+
         final Semaphore sem = new Semaphore(0);
 
         handler.post(() -> {
