@@ -46,8 +46,8 @@ sc_input_manager_init(struct sc_input_manager *im,
     im->last_keycode = SDLK_UNKNOWN;
     im->last_mod = 0;
     im->key_repeat = 0;
-    im->home_down_sent = false;
-    im->app_switch_down_sent = false;
+    im->home_down_scancode = SDL_SCANCODE_UNKNOWN;
+    im->app_switch_down_scancode = SDL_SCANCODE_UNKNOWN;
 
     im->next_sequence = 1; // 0 is reserved for SC_SEQUENCE_INVALID
 
@@ -463,26 +463,22 @@ sc_input_manager_process_key(struct sc_input_manager *im,
             return;
     }
 
-    if (!down) {
-        switch (event->scancode) {
-            case SDL_SCANCODE_1: // fall-through
-            case SDL_SCANCODE_KP_1:
-                if (im->home_down_sent) {
-                    im->home_down_sent = false;
-                    action_home(im, SC_ACTION_UP);
-                    return;
-                }
-                break;
-            case SDL_SCANCODE_2: // fall-through
-            case SDL_SCANCODE_KP_2:
-                if (im->app_switch_down_sent) {
-                    im->app_switch_down_sent = false;
-                    action_app_switch(im, SC_ACTION_UP);
-                    return;
-                }
-                break;
-            default:
-                break;
+    if ((!down || repeat) && event->scancode != SDL_SCANCODE_UNKNOWN) {
+        // The key that triggered HOME or APP_SWITCH may be released (or
+        // repeated) after MOD: swallow its repeats, and send the UP event
+        if (event->scancode == im->home_down_scancode) {
+            if (!down) {
+                im->home_down_scancode = SDL_SCANCODE_UNKNOWN;
+                action_home(im, SC_ACTION_UP);
+            }
+            return;
+        }
+        if (event->scancode == im->app_switch_down_scancode) {
+            if (!down) {
+                im->app_switch_down_scancode = SDL_SCANCODE_UNKNOWN;
+                action_app_switch(im, SC_ACTION_UP);
+            }
+            return;
         }
     }
 
@@ -592,14 +588,14 @@ sc_input_manager_process_key(struct sc_input_manager *im,
                     // The UP event is sent above, if the DOWN event was sent
                     if (down && im->kp && !shift && !repeat && !paused) {
                         action_home(im, action);
-                        im->home_down_sent = true;
+                        im->home_down_scancode = event->scancode;
                     }
                     return;
                 case SDL_SCANCODE_2: // fall-through
                 case SDL_SCANCODE_KP_2:
                     if (down && im->kp && !shift && !repeat && !paused) {
                         action_app_switch(im, action);
-                        im->app_switch_down_sent = true;
+                        im->app_switch_down_scancode = event->scancode;
                     }
                     return;
                 default:

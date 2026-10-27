@@ -45,11 +45,12 @@ struct sc_input_manager {
     SDL_Keycode last_keycode;
     uint16_t last_mod;
 
-    // Whether the DOWN event of the HOME or APP_SWITCH shortcut has been sent.
-    // The matching UP event must be sent even if MOD is released first (it is
-    // then not recognized as a shortcut anymore).
-    bool home_down_sent;
-    bool app_switch_down_sent;
+    // Scancode of the key whose DOWN event triggered the HOME or APP_SWITCH
+    // shortcut (SDL_SCANCODE_UNKNOWN if none). The matching UP event must be
+    // sent even if MOD is released first (it is then not recognized as a
+    // shortcut anymore), and the repeats of that key must be swallowed.
+    SDL_Scancode home_down_scancode;
+    SDL_Scancode app_switch_down_scancode;
 
     uint64_t next_sequence; // used for request acknowledgements
 
