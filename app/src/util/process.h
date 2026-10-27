@@ -68,6 +68,7 @@ enum sc_process_result {
 
 #define SC_PROCESS_NO_STDOUT (1 << 0)
 #define SC_PROCESS_NO_STDERR (1 << 1)
+#define SC_PROCESS_NO_WINDOW (1 << 2)
 
 /**
  * Execute the command and write the process id to `pid`
@@ -75,9 +76,15 @@ enum sc_process_result {
  * The `flags` argument is a bitwise OR of the following values:
  *  - SC_PROCESS_NO_STDOUT
  *  - SC_PROCESS_NO_STDERR
+ *  - SC_PROCESS_NO_WINDOW
  *
- * It indicates if stdout and stderr must be inherited from the VNdroid process
- * (i.e. if the process must output to the VNdroid console).
+ * SC_PROCESS_NO_STDOUT and SC_PROCESS_NO_STDERR indicate if stdout and stderr
+ * must be inherited from the VNdroid process (i.e. if the process must output
+ * to the VNdroid console).
+ *
+ * SC_PROCESS_NO_WINDOW (Windows only, ignored elsewhere) gives the process a
+ * console of its own, without a window, instead of no console. It requires
+ * SC_PROCESS_NO_STDOUT, SC_PROCESS_NO_STDERR and no pipes.
  */
 enum sc_process_result
 sc_process_execute(const char *const argv[], sc_pid *pid, unsigned flags);

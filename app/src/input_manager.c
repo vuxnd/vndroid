@@ -530,7 +530,7 @@ sc_input_manager_process_key(struct sc_input_manager *im,
                 sc_push_event(SDL_EVENT_QUIT);
                 return;
             case SDLK_U:
-                if (!shift && !repeat && down) {
+                if (!shift && !repeat && down && !disconnected) {
                     sc_update_check(true);
                 }
                 return;

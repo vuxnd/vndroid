@@ -7,6 +7,7 @@
 #include "events.h"
 #include "icon.h"
 #include "options.h"
+#include "update.h"
 #include "util/log.h"
 #include "util/sdl.h"
 
@@ -1321,6 +1322,7 @@ sc_screen_handle_disconnection(struct sc_screen *screen) {
         return;
     }
 
+    bool timed_out = false;
     SDL_Event event;
     while (SDL_WaitEvent(&event)) {
         switch (event.type) {
@@ -1346,12 +1348,26 @@ sc_screen_handle_disconnection(struct sc_screen *screen) {
                 break;
             }
             case SC_EVENT_DISCONNECTED_TIMEOUT:
+                if (sc_update_is_downloading()) {
+                    // Closing now would cancel the download
+                    LOGI("Waiting for the update download to complete");
+                    timed_out = true;
+                    break;
+                }
                 LOGD("Closing after device disconnection");
                 return;
             case SDL_EVENT_QUIT:
                 LOGD("User requested to quit");
                 sc_screen_interrupt_disconnect(screen);
                 return;
+            case SC_EVENT_UPDATE_CHECKED:
+            case SC_EVENT_UPDATE_DOWNLOADED:
+                sc_update_handle_event(&event);
+                if (timed_out && !sc_update_is_downloading()) {
+                    LOGD("Closing after device disconnection");
+                    return;
+                }
+                break;
             default:
                 sc_input_manager_handle_event(&screen->im, &event);
         }

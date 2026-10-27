@@ -16,6 +16,13 @@ sc_process_execute_p(const char *const argv[], HANDLE *handle, unsigned flags,
                      HANDLE *pin, HANDLE *pout, HANDLE *perr) {
     bool inherit_stdout = !pout && !(flags & SC_PROCESS_NO_STDOUT);
     bool inherit_stderr = !perr && !(flags & SC_PROCESS_NO_STDERR);
+    bool no_window = flags & SC_PROCESS_NO_WINDOW;
+
+    if (no_window) {
+        // The process uses the std handles of its own console
+        assert(!pin && !pout && !perr);
+        assert(!inherit_stdout && !inherit_stderr);
+    }
 
     // Add 1 per non-NULL pointer
     unsigned handle_count = !!pin || !!pout || !!perr;
@@ -67,7 +74,9 @@ sc_process_execute_p(const char *const argv[], HANDLE *handle, unsigned flags,
     si.StartupInfo.cb = sizeof(si);
     HANDLE handles[3];
 
-    si.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
+    if (!no_window) {
+        si.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
+    }
     if (inherit_stdout) {
         si.StartupInfo.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     }
@@ -144,7 +153,10 @@ sc_process_execute_p(const char *const argv[], HANDLE *handle, unsigned flags,
     if (handle_count > 0) {
         dwCreationFlags |= EXTENDED_STARTUPINFO_PRESENT;
     }
-    if (!inherit_stdout && !inherit_stderr) {
+    if (no_window) {
+        // A console of its own, without a window
+        dwCreationFlags |= CREATE_NO_WINDOW;
+    } else if (!inherit_stdout && !inherit_stderr) {
         // DETACHED_PROCESS to disable stdin, stdout and stderr
         dwCreationFlags |= DETACHED_PROCESS;
     }

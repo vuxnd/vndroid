@@ -7,6 +7,7 @@
 #include "cli.h"
 #include "events.h"
 #include "options.h"
+#include "update.h"
 #include "vndroid.h"
 #ifdef HAVE_USB
 # include "usb/vndroid_otg.h"
@@ -82,6 +83,12 @@ main_vndroid(int argc, char *argv[]) {
     if (!sc_main_thread_init()) {
         ret = VNDROID_EXIT_FAILURE;
         goto net_cleanup;
+    }
+
+    // Restarting after an update with the same --record would overwrite the
+    // recording: restart without arguments then
+    if (!args.opts.record_filename) {
+        sc_update_set_args(argc, argv);
     }
 
 #ifdef HAVE_USB

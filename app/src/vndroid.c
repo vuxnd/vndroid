@@ -998,7 +998,7 @@ aoa_complete:
         }
     }
 
-    if (!sc_update_init()) {
+    if (!sc_update_init(screen_initialized ? s->screen.window : NULL)) {
         goto end;
     }
     update_initialized = true;

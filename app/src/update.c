@@ -57,6 +57,10 @@ static struct {
     char *helper_path;
     char *target_dir;
     bool install_pending;
+    char pid_str[16];
+    SDL_Window *window;
+    int argc;
+    char *const *argv;
 } update;
 
 /* Worker thread */
@@ -179,9 +183,9 @@ curl_capture(const char *const argv[], char *buf, size_t size) {
 static bool
 curl_download(const char *url, const char *path,
               uint8_t digest[SC_SHA256_DIGEST_SIZE]) {
-    const char *const argv[] = {"curl", "-fsSL", "--connect-timeout", "15",
-                                "--speed-time", "60", "--speed-limit", "1",
-                                url, NULL};
+    const char *const argv[] = {"curl", "-q", "-fsSL", "--connect-timeout",
+                                "15", "--speed-time", "60", "--speed-limit",
+                                "1", url, NULL};
     char *buf = malloc(CHUNK_SIZE);
     if (!buf) {
         LOG_OOM();
@@ -235,7 +239,7 @@ curl_download(const char *url, const char *path,
 
 static void
 check_job(void) {
-    const char *const argv[] = {"curl", "-s", "--connect-timeout", "15",
+    const char *const argv[] = {"curl", "-q", "-s", "--connect-timeout", "15",
                                 "--max-time", "30", "-o", NULDEV,
                                 "-w", "%{redirect_url}",
                                 SC_UPDATE_LATEST_URL, NULL};
@@ -263,6 +267,7 @@ static void
 download_job(void) {
     char *asset = NULL;
     char *url = NULL;
+    char *name = NULL;
     char *path = NULL;
 
     asset = sc_update_asset_name(UPDATE_TARGET, update.tag);
@@ -279,8 +284,8 @@ download_job(void) {
         set_error("Download failed");
         goto end;
     }
-    const char *const sums_argv[] = {"curl", "-fsSL", "--connect-timeout", "15",
-                                     "--max-time", "60", url, NULL};
+    const char *const sums_argv[] = {"curl", "-q", "-fsSL", "--connect-timeout",
+                                     "15", "--max-time", "60", url, NULL};
     char sums[SUMS_MAX_SIZE];
     uint8_t expected[SC_SHA256_DIGEST_SIZE];
     if (!curl_capture(sums_argv, sums, sizeof(sums))
@@ -289,7 +294,14 @@ download_job(void) {
         goto end;
     }
 
-    // Download the asset to the temp dir
+    // Download the asset to the temp dir, prefixed with the PID so that other
+    // instances never touch this file
+    if (asprintf(&name, "%s-%s", update.pid_str, asset) == -1) {
+        name = NULL;
+        LOG_OOM();
+        set_error("Download failed");
+        goto end;
+    }
 #ifdef _WIN32
     char *tmp = sc_get_env("TEMP");
 #else
@@ -302,7 +314,7 @@ download_job(void) {
         set_error("Download failed");
         goto end;
     }
-    path = sc_file_build_path(tmp, asset);
+    path = sc_file_build_path(tmp, name);
     free(tmp);
     free(url);
     url = NULL;
@@ -333,6 +345,7 @@ download_job(void) {
 end:
     free(asset);
     free(url);
+    free(name);
     free(path);
 }
 
@@ -376,20 +389,43 @@ start_job(enum update_job job) {
 
 /* Main thread */
 
+void
+sc_update_set_args(int argc, char *const argv[]) {
+    update.argc = argc;
+    update.argv = argv;
+}
+
 bool
-sc_update_init(void) {
+sc_update_init(SDL_Window *window) {
     if (!sc_intr_init(&update.intr)) {
         return false;
     }
+#ifdef _WIN32
+    snprintf(update.pid_str, sizeof(update.pid_str), "%lu",
+             GetCurrentProcessId());
+#else
+    snprintf(update.pid_str, sizeof(update.pid_str), "%ld", (long) getpid());
+#endif
+    update.window = window;
     update.initialized = true;
     return true;
 }
 
+// Release a captured mouse so that the dialog can be used. It stays released:
+// a click in the window captures it again.
+static void
+release_mouse(void) {
+    if (update.window) {
+        SDL_SetWindowRelativeMouseMode(update.window, false);
+    }
+}
+
 static void
 show_message(bool error, const char *message) {
+    release_mouse();
     SDL_ShowSimpleMessageBox(error ? SDL_MESSAGEBOX_ERROR
                                    : SDL_MESSAGEBOX_INFORMATION,
-                             "VNdroid", message, NULL);
+                             "VNdroid", message, update.window);
 }
 
 static void
@@ -403,22 +439,24 @@ show_failure(const char *what, const char *reason) {
     free(message);
 }
 
-// Return true if the user clicked `yes`; Escape and errors mean no
+// Return true if the user clicked `yes`; Return, Escape and errors mean no
 static bool
 ask(const char *title, const char *message, const char *yes, const char *no) {
     const SDL_MessageBoxButtonData buttons[] = {
-        {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, no},
-        {SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, yes},
+        {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT
+            | SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 0, no},
+        {0, 1, yes},
     };
     const SDL_MessageBoxData data = {
         .flags = SDL_MESSAGEBOX_INFORMATION,
-        .window = NULL,
+        .window = update.window,
         .title = title,
         .message = message,
         .numbuttons = ARRAY_LEN(buttons),
         .buttons = buttons,
     };
     int id = 0;
+    release_mouse();
     return SDL_ShowMessageBox(&data, &id) && id == 1;
 }
 
@@ -458,12 +496,15 @@ sc_update_check(bool manual) {
     }
 }
 
-// Check that the running install can be replaced and find the helper
-static bool
+// Check that the running install can be replaced and find the helper. Return
+// NULL on success, else the message to show.
+static const char *
 prepare_install(void) {
+    const char *not_installed =
+        "Update is only available for the installed app";
     char *exe = sc_file_get_executable_path();
     if (!exe) {
-        return false;
+        return not_installed;
     }
 #ifdef __APPLE__
     char *target_dir = sc_update_bundle_path(exe);
@@ -476,14 +517,26 @@ prepare_install(void) {
     if (!target_dir || !helper_path || !sc_file_is_regular(helper_path)) {
         free(target_dir);
         free(helper_path);
-        return false;
+        return not_installed;
     }
+
+#ifdef __APPLE__
+    // The helper replaces the bundle: check before the download
+    char *parent_dir = sc_update_parent_dir(target_dir);
+    bool writable = parent_dir && !access(parent_dir, W_OK);
+    free(parent_dir);
+    if (!writable) {
+        free(target_dir);
+        free(helper_path);
+        return "Update needs write access to the folder containing VNdroid.app";
+    }
+#endif
 
     free(update.target_dir);
     free(update.helper_path);
     update.target_dir = target_dir;
     update.helper_path = helper_path;
-    return true;
+    return NULL;
 }
 
 static void
@@ -518,8 +571,9 @@ handle_checked(void) {
         return;
     }
 
-    if (!prepare_install()) {
-        show_message(true, "Update is only available for the installed app");
+    const char *install_error = prepare_install();
+    if (install_error) {
+        show_message(true, install_error);
         return;
     }
     if (!start_job(JOB_DOWNLOAD)) {
@@ -570,23 +624,40 @@ sc_update_handle_event(const SDL_Event *event) {
     }
 }
 
+bool
+sc_update_is_downloading(void) {
+    return update.thread_running && update.job == JOB_DOWNLOAD;
+}
+
 // Start the helper, which waits for this process to exit then installs
 static bool
 start_helper(void) {
-    char pid_str[16];
-#ifdef _WIN32
-    snprintf(pid_str, sizeof(pid_str), "%lu", GetCurrentProcessId());
-    unsigned flags = 0; // share the console
-#else
-    snprintf(pid_str, sizeof(pid_str), "%ld", (long) getpid());
-    unsigned flags = SC_PROCESS_NO_STDOUT | SC_PROCESS_NO_STDERR;
-#endif
-    const char *const argv[] = {update.helper_path, update.asset_path,
-                                update.target_dir, pid_str, NULL};
+    // The helper restarts VNdroid with the arguments of this process
+    int nargs = update.argc > 1 ? update.argc - 1 : 0;
+    const char **argv = malloc((5 + nargs) * sizeof(*argv));
+    if (!argv) {
+        LOG_OOM();
+        return false;
+    }
+    argv[0] = update.helper_path;
+    argv[1] = update.asset_path;
+    argv[2] = update.target_dir;
+    argv[3] = update.pid_str;
+    for (int i = 0; i < nargs; ++i) {
+        argv[4 + i] = update.argv[1 + i];
+    }
+    argv[4 + nargs] = NULL;
+
+    // On Windows, a console of its own: Ctrl+C or closing the console of
+    // VNdroid must not interrupt the install
+    unsigned flags = SC_PROCESS_NO_STDOUT | SC_PROCESS_NO_STDERR
+                   | SC_PROCESS_NO_WINDOW;
 
     LOGI("Starting %s", update.helper_path);
     sc_pid pid;
-    if (sc_process_execute(argv, &pid, flags) != SC_PROCESS_SUCCESS) {
+    enum sc_process_result r = sc_process_execute(argv, &pid, flags);
+    free(argv);
+    if (r != SC_PROCESS_SUCCESS) {
         LOGE("Could not start %s", update.helper_path);
         return false;
     }

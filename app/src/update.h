@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <SDL3/SDL_events.h>
+#include <SDL3/SDL_video.h>
 
 #include "util/sha256.h"
 
@@ -83,9 +84,15 @@ sc_update_parent_dir(const char *path);
 
 /* Update flow (update.c), main thread only */
 
-// Call once before the event loop
+// argv as received by main(): argv[1..argc-1] are passed to the update helper,
+// which restarts VNdroid with them. Must stay valid until sc_update_destroy().
+void
+sc_update_set_args(int argc, char *const argv[]);
+
+// window: parent of the update dialogs, NULL if there is none. Call once
+// before the event loop.
 bool
-sc_update_init(void);
+sc_update_init(SDL_Window *window);
 
 // Start a check in a background thread. manual: show "up to date" and errors
 // in dialogs (an automatic check only logs them). No-op with a log line if
@@ -98,8 +105,15 @@ sc_update_check(bool manual);
 void
 sc_update_handle_event(const SDL_Event *event);
 
+// True from the start of a download until its SC_EVENT_UPDATE_DOWNLOADED event
+// has been handled
+bool
+sc_update_is_downloading(void);
+
 // Call after all other cleanup: interrupt and join the worker. If the user
-// chose "Restart now", start the helper detached. Then release everything.
+// chose "Restart now", start the helper without waiting for it, passing the
+// arguments from sc_update_set_args(). Otherwise delete the download. Then
+// release everything.
 void
 sc_update_destroy(void);
 
