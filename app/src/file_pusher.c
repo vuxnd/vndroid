@@ -124,6 +124,7 @@ request_scan_file(struct sc_file_pusher *fp) {
     }
 
     if (!sc_controller_push_msg(fp->controller, &msg)) {
+        free(msg.scan_file.path);
         LOGW("Could not request 'scan file'");
         return false;
     }
