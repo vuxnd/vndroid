@@ -81,6 +81,25 @@ public class ControlMessageReaderTest {
     }
 
     @Test
+    public void testParseTooLongTextEvent() throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(bos);
+        dos.writeByte(ControlMessage.TYPE_INJECT_TEXT);
+        dos.writeInt(Integer.MAX_VALUE); // length, the payload is never sent
+        byte[] packet = bos.toByteArray();
+
+        ByteArrayInputStream bis = new ByteArrayInputStream(packet);
+        ControlMessageReader reader = new ControlMessageReader(bis);
+
+        try {
+            reader.read();
+            Assert.fail("Reader did not reject the length");
+        } catch (ControlProtocolException e) {
+            // expected
+        }
+    }
+
+    @Test
     public void testParseTouchEvent() throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(bos);
