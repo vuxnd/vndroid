@@ -3,7 +3,7 @@
 #     VERSION=myversion ./release.sh
 set -e
 
-cd "$(dirname ${BASH_SOURCE[0]})"
+cd "$(dirname "${BASH_SOURCE[0]}")"
 rm -rf output
 
 ./test_server.sh

@@ -44,7 +44,7 @@ process_args() {
 
 NPROC=$(getconf _NPROCESSORS_ONLN)
 
-DEPS_DIR=$(dirname ${BASH_SOURCE[0]})
+DEPS_DIR=$(dirname "${BASH_SOURCE[0]}")
 cd "$DEPS_DIR"
 
 PATCHES_DIR="$PWD/patches"

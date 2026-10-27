@@ -1,6 +1,6 @@
 #!/bin/bash
 set -ex -o pipefail
-cd "$(dirname ${BASH_SOURCE[0]})"
+cd "$(dirname "${BASH_SOURCE[0]}")"
 . build_common
 
 # The app downloads vndroid-<target>-<tag>.<ext> from the release of that tag

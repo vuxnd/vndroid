@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -ex
-. $(dirname ${BASH_SOURCE[0]})/_init
+. "$(dirname "${BASH_SOURCE[0]}")/_init"
 process_args "$@"
 
 VERSION=1.5.4

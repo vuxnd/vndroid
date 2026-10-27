@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -ex
-. $(dirname ${BASH_SOURCE[0]})/_init "$@"
+. "$(dirname "${BASH_SOURCE[0]}")/_init" "$@"
 
 VERSION=37.0.1
 URL="https://dl.google.com/android/repository/platform-tools_r$VERSION-darwin.zip"

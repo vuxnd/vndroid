@@ -23,7 +23,7 @@ case "$1" in
         ;;
 esac
 
-cd "$(dirname ${BASH_SOURCE[0]})"
+cd "$(dirname "${BASH_SOURCE[0]}")"
 . build_common
 cd .. # root project dir
 

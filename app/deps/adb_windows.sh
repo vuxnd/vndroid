@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -ex
-. $(dirname ${BASH_SOURCE[0]})/_init "$@"
+. "$(dirname "${BASH_SOURCE[0]}")/_init" "$@"
 
 # Google only provides x86 Windows platform-tools, so the same adb.exe is used
 # for all Windows targets (on Windows ARM64, it runs via emulation).
