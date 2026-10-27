@@ -3,6 +3,14 @@
 # show the end of the output in a dialog when vndroid fails.
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# macOS 10.13/10.14 add a -psn_0_NNNN argument, which vndroid rejects
+ARGS=()
+for arg in "$@"
+do
+    [[ $arg == -psn_* ]] || ARGS+=("$arg")
+done
+set -- "${ARGS[@]}"
+
 if [[ -t 2 ]]
 then
     exec "$DIR/vndroid" "$@"
