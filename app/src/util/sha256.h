@@ -3,25 +3,32 @@
 
 #include "common.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #define SC_SHA256_DIGEST_SIZE 32
 
+struct AVSHA;
+
 struct sc_sha256 {
-    uint32_t state[8];
-    uint64_t length; // total bytes hashed
-    uint8_t buffer[64];
-    size_t buffer_len;
+    struct AVSHA *av_sha;
 };
 
-void
+// Return false on out-of-memory
+bool
 sc_sha256_init(struct sc_sha256 *ctx);
 
 void
 sc_sha256_update(struct sc_sha256 *ctx, const void *data, size_t len);
 
+// Write the digest and release the context
 void
 sc_sha256_final(struct sc_sha256 *ctx, uint8_t digest[SC_SHA256_DIGEST_SIZE]);
+
+// Release the context without computing the digest. Safe after
+// sc_sha256_final() or a failed sc_sha256_init().
+void
+sc_sha256_destroy(struct sc_sha256 *ctx);
 
 #endif

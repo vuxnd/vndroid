@@ -208,10 +208,12 @@ curl_download(const char *url, const char *path,
     }
 
     struct sc_sha256 sha;
-    sc_sha256_init(&sha);
+    bool ok = sc_sha256_init(&sha);
+    if (!ok) {
+        LOG_OOM();
+    }
 
-    bool ok = true;
-    for (;;) {
+    while (ok) {
         ssize_t r = sc_pipe_read_intr(&update.intr, pid, pout, buf, CHUNK_SIZE);
         if (r <= 0) {
             // EOF. On Windows, a closed pipe reads as an error. A truncated
@@ -234,6 +236,7 @@ curl_download(const char *url, const char *path,
     if (ok) {
         sc_sha256_final(&sha, digest);
     }
+    sc_sha256_destroy(&sha);
     return ok;
 }
 
