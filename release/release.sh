@@ -17,6 +17,7 @@ rm -rf output
 ./package_client.sh win32 zip
 ./package_client.sh win64 zip
 
-./generate_checksums.sh
+# SHA256SUMS.txt comes from the release workflow, which builds all five
+# targets (winarm64 and the macOS dmgs cannot be built here)
 
 echo "Release generated in $PWD/output"
