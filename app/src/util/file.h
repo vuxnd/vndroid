@@ -34,7 +34,9 @@ sc_file_get_executable_path(void);
 /**
  * Return the part of the path before the last path separator
  *
- * For example, "/a/b" gives "/a".
+ * For example, "/a/b" gives "/a". Only the last separator counts, and what
+ * precedes it is returned as is: "/b" gives "" (the root is not special-cased)
+ * and "/a/b/" gives "/a/b".
  *
  * The result must be freed by the caller using free(). It returns NULL if the
  * path contains no separator, or on error.
