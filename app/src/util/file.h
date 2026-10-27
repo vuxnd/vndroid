@@ -32,6 +32,17 @@ char *
 sc_file_get_executable_path(void);
 
 /**
+ * Return the part of the path before the last path separator
+ *
+ * For example, "/a/b" gives "/a".
+ *
+ * The result must be freed by the caller using free(). It returns NULL if the
+ * path contains no separator, or on error.
+ */
+char *
+sc_file_get_parent_dir(const char *path);
+
+/**
  * Return the absolute path of a file in the same directory as the executable
  *
  * The result must be freed by the caller using free(). It may return NULL on

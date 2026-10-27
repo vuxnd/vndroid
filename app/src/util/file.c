@@ -25,26 +25,44 @@ sc_file_build_path(const char *dir, const char *name) {
 }
 
 char *
+sc_file_get_parent_dir(const char *path) {
+    // dirname() does not work correctly everywhere, so get the parent
+    // directory manually.
+    const char *p = strrchr(path, SC_PATH_SEPARATOR);
+    if (!p) {
+        return NULL;
+    }
+
+    size_t len = p - path;
+    char *dir = malloc(len + 1);
+    if (!dir) {
+        LOG_OOM();
+        return NULL;
+    }
+
+    memcpy(dir, path, len);
+    dir[len] = '\0';
+    return dir;
+}
+
+char *
 sc_file_get_local_path(const char *name) {
     char *executable_path = sc_file_get_executable_path();
     if (!executable_path) {
         return NULL;
     }
 
-    // dirname() does not work correctly everywhere, so get the parent
-    // directory manually.
-    char *p = strrchr(executable_path, SC_PATH_SEPARATOR);
-    if (!p) {
+    char *dir = sc_file_get_parent_dir(executable_path);
+    if (!dir) {
         LOGE("Unexpected executable path: \"%s\" (it should contain a '%c')",
              executable_path, SC_PATH_SEPARATOR);
         free(executable_path);
         return NULL;
     }
 
-    *p = '\0'; // modify executable_path in place
-    char *dir = executable_path;
     char *file_path = sc_file_build_path(dir, name);
 
+    free(dir);
     free(executable_path);
 
     return file_path;

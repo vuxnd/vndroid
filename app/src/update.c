@@ -504,7 +504,7 @@ prepare_install(void) {
 #ifdef __APPLE__
     char *target_dir = sc_update_bundle_path(exe);
 #else
-    char *target_dir = sc_update_parent_dir(exe);
+    char *target_dir = sc_file_get_parent_dir(exe);
 #endif
     free(exe);
 
@@ -517,7 +517,7 @@ prepare_install(void) {
 
 #ifdef __APPLE__
     // The helper replaces the bundle: check before the download
-    char *parent_dir = sc_update_parent_dir(target_dir);
+    char *parent_dir = sc_file_get_parent_dir(target_dir);
     bool writable = parent_dir && !access(parent_dir, W_OK);
     free(parent_dir);
     if (!writable) {
