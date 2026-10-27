@@ -111,12 +111,18 @@ sdl_configure_ctrl_c_windows(void) {
 }
 #endif // _WIN32
 
+// Start the automatic update check once the window is shown
+static void
+auto_update_check_if_shown(struct vndroid *s, bool *auto_update_check) {
+    if (*auto_update_check && s->screen.window_shown) {
+        sc_update_check(false);
+        *auto_update_check = false;
+    }
+}
+
 static enum vndroid_exit_code
 event_loop(struct vndroid *s, bool has_screen, bool auto_update_check) {
-    if (auto_update_check && s->screen.window_shown) {
-        sc_update_check(false);
-        auto_update_check = false;
-    }
+    auto_update_check_if_shown(s, &auto_update_check);
 
     SDL_Event event;
     while (SDL_WaitEvent(&event)) {
@@ -152,10 +158,7 @@ event_loop(struct vndroid *s, bool has_screen, bool auto_update_check) {
                 if (has_screen) {
                     sc_screen_handle_event(&s->screen, &event);
                 }
-                if (auto_update_check && s->screen.window_shown) {
-                    sc_update_check(false);
-                    auto_update_check = false;
-                }
+                auto_update_check_if_shown(s, &auto_update_check);
                 break;
             case SC_EVENT_UPDATE_CHECKED:
             case SC_EVENT_UPDATE_DOWNLOADED:
@@ -349,12 +352,8 @@ set_terminal_title_with_prefix(const char *value) {
 static bool
 sc_init_video_hwdec(struct sc_hwdec *hwdec, enum sc_hwdec_mode mode,
                     struct sc_screen *screen) {
-    enum AVHWDeviceType hw_type = AV_HWDEVICE_TYPE_NONE;
-    SDL_Renderer *renderer = NULL;
-    if (screen) {
-        hw_type = sc_screen_get_hw_type(screen);
-        renderer = screen->renderer;
-    }
+    enum AVHWDeviceType hw_type = sc_screen_get_hw_type(screen);
+    SDL_Renderer *renderer = screen->renderer;
     bool hw_forced = hw_type != AV_HWDEVICE_TYPE_NONE
                   && mode != SC_HWDEC_MODE_AUTO;
     if (sc_hwdec_init(hwdec, hw_type, hw_forced, renderer)) {
