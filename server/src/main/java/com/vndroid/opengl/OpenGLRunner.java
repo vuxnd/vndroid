@@ -125,7 +125,7 @@ public final class OpenGLRunner {
                 EGL14.EGL_NONE
         };
         eglContext = EGL14.eglCreateContext(eglDisplay, eglConfig, EGL14.EGL_NO_CONTEXT, contextAttribList, 0);
-        if (eglContext == null) {
+        if (eglContext == null || eglContext == EGL14.EGL_NO_CONTEXT) {
             EGL14.eglTerminate(eglDisplay);
             throw new OpenGLException("Failed to create EGL context");
         }
@@ -134,7 +134,7 @@ public final class OpenGLRunner {
                 EGL14.EGL_NONE
         };
         eglSurface = EGL14.eglCreateWindowSurface(eglDisplay, eglConfig, outputSurface, surfaceAttribList, 0);
-        if (eglSurface == null) {
+        if (eglSurface == null || eglSurface == EGL14.EGL_NO_SURFACE) {
             EGL14.eglDestroyContext(eglDisplay, eglContext);
             EGL14.eglTerminate(eglDisplay);
             throw new OpenGLException("Failed to create EGL window surface");
