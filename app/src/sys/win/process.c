@@ -25,7 +25,7 @@ sc_process_execute_p(const char *const argv[], HANDLE *handle, unsigned flags,
     }
 
     // Add 1 per non-NULL pointer
-    unsigned handle_count = !!pin || !!pout || !!perr;
+    unsigned handle_count = !!pin + !!pout + !!perr;
 
     enum sc_process_result ret = SC_PROCESS_ERROR_GENERIC;
 
